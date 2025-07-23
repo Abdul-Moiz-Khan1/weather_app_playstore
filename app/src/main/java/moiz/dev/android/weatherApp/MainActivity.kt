@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.SPLASH
+                    startDestination = Routes.HOME
                 ) {
                     composable(Routes.SPLASH) { Splash(navController,viewModel) }
                     composable(Routes.HOME) { Home(navController,viewModel) }

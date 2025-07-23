@@ -42,12 +42,14 @@ import androidx.navigation.NavController
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +61,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import moiz.dev.android.weatherApp.R
-import moiz.dev.android.weatherApp.Utils.getDayOfWeek
+import moiz.dev.android.weatherApp.utils.Utils.getDayOfWeek
 import moiz.dev.android.weatherApp.data.model.DailyForecastItem
 import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.ui.theme.cards_bg
@@ -69,13 +71,14 @@ import moiz.dev.android.weatherApp.ui.theme.main_card_grad_bottom
 import moiz.dev.android.weatherApp.ui.theme.main_card_grad_top
 import moiz.dev.android.weatherApp.ui.theme.text_left_grad
 import moiz.dev.android.weatherApp.ui.theme.text_right_grad
+import moiz.dev.android.weatherApp.utils.Utils
 
 @Composable
 fun Home(
     navController: NavController,
     viewModel: WeatherViewModel
 ) {
-    val context = LocalContext.current
+    viewModel.loadCacheData()
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
     Log.d("CatchError_size", forcast?.value?.days?.size.toString())
@@ -304,7 +307,7 @@ fun ShowUi(forcast: ApiResponse?) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(getImage(forcast?.currentConditions?.conditions.toString())),
+                    painter = painterResource(Utils.getImage(forcast?.currentConditions?.conditions.toString())),
                     contentDescription = "null",
                     modifier = Modifier
                         .width(200.dp)
@@ -360,7 +363,7 @@ fun ShowUi(forcast: ApiResponse?) {
 
             }
         }
-        custom_divider()
+        Custom_divider()
 
         Spacer(modifier = Modifier.height(8.dp))
         Column(//attributes
@@ -404,10 +407,12 @@ fun ShowUi(forcast: ApiResponse?) {
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        custom_divider()
+        Custom_divider()
         ScrollableRow(dailyForecastList)
         Spacer(modifier = Modifier.height(8.dp))
         WeeklyForecastCard(forcast)
+        Spacer(modifier = Modifier.height(8.dp))
+        DetailsCard(forcast)
 
     }
 
@@ -522,16 +527,17 @@ fun dailyForecastView(item: DailyForecastItem) {
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
+            Log.d("time", item.time)
             Text(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                text = item.time.takeLast(5),
+                text = item.time.dropLast(3),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White
             )
 
             Image(
-                painter = painterResource(getImage(item.img)),
+                painter = painterResource(Utils.getImage(item.img)),
                 null,
                 modifier = Modifier.size(70.dp)
             )
@@ -557,7 +563,7 @@ fun WeeklyForecastView(date: String, img: String, temp_high: String, temp_low: S
     ) {
         Text(text = getDayOfWeek(date), color = Color.White)
         Image(
-            painter = painterResource(id = getImage(img)),
+            painter = painterResource(id = Utils.getImage(img)),
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
@@ -567,7 +573,7 @@ fun WeeklyForecastView(date: String, img: String, temp_high: String, temp_low: S
 }
 
 @Composable
-fun DetailsCard(modifier: Modifier = Modifier) {
+fun DetailsCard(forcast: ApiResponse?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -582,12 +588,132 @@ fun DetailsCard(modifier: Modifier = Modifier) {
                 )
             )
             .padding(16.dp)
-    ) {}
+    ) {
+        Text(
+            "Details",
+            color = Color.White,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.SansSerif
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(Utils.getImage(forcast?.currentConditions?.icon.toString())),
+                    null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Feels like: ",
+                        color = Color.Gray,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        forcast?.currentConditions?.feelslike.toString(),
+                        color = Color.White,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Humidity: ",
+                        color = Color.Gray,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        forcast?.currentConditions?.humidity.toString(),
+                        color = Color.White,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Visibility: ",
+                        color = Color.Gray,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        forcast?.currentConditions?.visibility.toString(),
+                        color = Color.White,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "UV index: ",
+                        color = Color.Gray,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        forcast?.currentConditions?.uvindex.toString(),
+                        color = Color.White,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Dew Point: ",
+                        color = Color.Gray,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        forcast?.currentConditions?.dew.toString(),
+                        color = Color.White,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+            }
+        }
+        Text(
+            forcast?.description.toString(),
+            modifier = Modifier.padding(4.dp),
+            color = Color.Gray
+        )
+    }
 
 }
 
 @Composable
-fun custom_divider() {
+fun Custom_divider() {
     Divider(
         color = text_right_grad,
         thickness = 1.dp,
@@ -595,16 +721,6 @@ fun custom_divider() {
     )
 }
 
-fun getImage(condition: String): Int {
-    return when {
-        condition.contains("sunny", ignoreCase = true) -> R.drawable.sunny
-        condition.contains("clear", ignoreCase = true) -> R.drawable.splash_img
-        condition.contains("cloudy", ignoreCase = true) -> R.drawable.partly_cloudy
-        condition.contains("rain", ignoreCase = true) -> R.drawable.rainy
-        condition.contains("wind", ignoreCase = true) -> R.drawable.windy_cloudy
-        else -> R.drawable.splash_img
-    }
-}
 
 //@Preview(showBackground = true)
 //@Composable

@@ -43,7 +43,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import moiz.dev.android.weatherApp.R
-import moiz.dev.android.weatherApp.Utils.getCurrentLocation
+import moiz.dev.android.weatherApp.utils.Utils.getCurrentLocation
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
 import moiz.dev.android.weatherApp.ui.theme.left_grad
 import moiz.dev.android.weatherApp.utils.Routes
