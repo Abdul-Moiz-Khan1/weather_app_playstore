@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,6 +79,7 @@ fun Home(
     navController: NavController,
     viewModel: WeatherViewModel
 ) {
+    viewModel.loadCacheData()
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
     Log.d("CatchError_size", forcast?.value?.days?.size.toString())
@@ -133,7 +135,6 @@ fun ShowUi(forcast: ApiResponse?) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         val dailyForecastList = listOf<DailyForecastItem>(
             DailyForecastItem(
                 forcast?.days?.get(0)?.hours[0]?.datetime.toString(),
@@ -291,77 +292,80 @@ fun ShowUi(forcast: ApiResponse?) {
                 .background(cards_bg)
                 .padding(12.dp), textAlign = TextAlign.Center
         )
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
+                .fillMaxHeight(0.15f),
+            contentAlignment = Alignment.Center
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Column(
+            Row(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .fillMaxHeight(0.12f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(Utils.getImage(forcast?.currentConditions?.conditions.toString())),
-                    contentDescription = "null",
+                Column(
                     modifier = Modifier
-                        .width(200.dp)
-                        .height(200.dp),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    "Feels like ${forcast?.currentConditions?.feelslike}°C",
-                    fontSize = 12.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Light,
-                    textAlign = TextAlign.Center,
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(Utils.getImage(forcast?.currentConditions?.conditions.toString())),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(200.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Text(
+                        "Feels like ${forcast?.currentConditions?.feelslike}°C",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Light,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                }
+
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.4f)
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.12f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    "${forcast?.currentConditions?.temp}°",
-                    fontSize = 60.sp,
-                    textAlign = TextAlign.Center,
-                    style = TextStyle(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                text_left_grad,
-                                text_right_grad
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "${forcast?.currentConditions?.temp}°",
+                        fontSize = 60.sp,
+                        textAlign = TextAlign.Center,
+                        style = TextStyle(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    text_left_grad,
+                                    text_right_grad
+                                )
                             )
                         )
                     )
-                )
-                Text(
-                    "${forcast?.currentConditions?.conditions}",
-                    fontSize = 12.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Light
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    "Wind ${forcast?.currentConditions?.windspeed} Km/h",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Light
-                )
-
+                    Text(
+                        "${forcast?.currentConditions?.conditions}",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Light
+                    )
+                    Text(
+                        "Wind ${forcast?.currentConditions?.windspeed} Km/h",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Light
+                    )
+                }
             }
         }
+
         Custom_divider()
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -377,12 +381,12 @@ fun ShowUi(forcast: ApiResponse?) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                attribute(
+                Attribute(
                     R.drawable.precipitation,
                     "Precipitation",
                     "${forcast?.currentConditions?.precip} mm"
                 )
-                attribute(R.drawable.wind, "Wind", "${forcast?.currentConditions?.windspeed} Km/h")
+                Attribute(R.drawable.wind, "Wind", "${forcast?.currentConditions?.windspeed} Km/h")
 
 
             }
@@ -391,13 +395,13 @@ fun ShowUi(forcast: ApiResponse?) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                attribute(
+                Attribute(
                     R.drawable.humidity,
                     "Humidity",
                     "${forcast?.currentConditions?.humidity}%"
                 )
 
-                attribute(
+                Attribute(
                     R.drawable.sunset,
                     "Sunset",
                     "${forcast?.currentConditions?.sunset}"
@@ -410,6 +414,8 @@ fun ShowUi(forcast: ApiResponse?) {
         ScrollableRow(dailyForecastList)
         Spacer(modifier = Modifier.height(8.dp))
         WeeklyForecastCard(forcast)
+        Spacer(modifier = Modifier.height(8.dp))
+        GotoForecastCard()
         Spacer(modifier = Modifier.height(8.dp))
         DetailsCard(forcast)
 
@@ -462,13 +468,13 @@ fun ScrollableRow(list: List<DailyForecastItem>) {
             .fillMaxWidth()
     ) {
         items(list) { item: DailyForecastItem ->
-            dailyForecastView(item)
+            DailyForecastView(item)
         }
     }
 }
 
 @Composable
-fun attribute(image: Int, attribute: String, value: String) {
+fun Attribute(image: Int, attribute: String, value: String) {
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -485,7 +491,7 @@ fun attribute(image: Int, attribute: String, value: String) {
 }
 
 @Composable
-fun dailyForecastView(item: DailyForecastItem) {
+fun DailyForecastView(item: DailyForecastItem) {
     Box(
         modifier = Modifier
             .height(160.dp)
@@ -611,7 +617,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                     painter = painterResource(Utils.getImage(forcast?.currentConditions?.icon.toString())),
                     null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Fit
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
@@ -712,6 +718,68 @@ fun DetailsCard(forcast: ApiResponse?) {
 }
 
 @Composable
+fun GotoForecastCard() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(40.dp))
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        main_card_grad_bottom,
+                        main_card_grad_top
+                    )
+                )
+            ), verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(0.8f)
+                .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                "See day by day forecasts",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Plan for next 7 days",
+                fontSize = 12.sp,
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+            )
+        }
+        Column(
+            modifier = Modifier
+                .weight(0.2f),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(main_card_grad_bottom),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.next),
+                    contentDescription = "Arrow",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(10.dp)
+                )
+            }
+
+        }
+    }
+}
+
+
+@Composable
 fun Custom_divider() {
     Divider(
         color = text_right_grad,
@@ -721,8 +789,8 @@ fun Custom_divider() {
 }
 
 
-//@Preview(showBackground = true)
-//@Composable
-//fun preview(modifier: Modifier = Modifier) {
-//    dailyForecastView()
-//}
+@Preview(showBackground = true)
+@Composable
+fun preview(modifier: Modifier = Modifier) {
+    GotoForecastCard()
+}

@@ -34,12 +34,16 @@ object Utils {
     fun getImage(condition: String): Int {
         return when {
             condition.contains("sunny", ignoreCase = true) -> R.drawable.sunny
-            condition.contains("clear", ignoreCase = true) -> R.drawable.sunny
-            condition.contains("cloudy", ignoreCase = true) -> R.drawable.partly_cloudy
-            condition.contains("rain", ignoreCase = true) -> R.drawable.rainy
+            condition.contains("clear", ignoreCase = true) -> R.drawable.day_clear
+            condition.contains("cloudy", ignoreCase = true) -> R.drawable.day_cloudy
+            condition.contains("rain", ignoreCase = true) -> R.drawable.rain
+            condition.contains("patchy rain", ignoreCase = true) -> R.drawable.patchy_rain
             condition.contains("wind", ignoreCase = true) -> R.drawable.windy_cloudy
             condition.contains("thunder", ignoreCase = true) -> R.drawable.thunderstorm
+            condition.contains("lightning", ignoreCase = true) -> R.drawable.lightning
             condition.contains("fog", ignoreCase = true) -> R.drawable.fog
+            condition.contains("snow", ignoreCase = true) -> R.drawable.snow
+            condition.contains("blizzard", ignoreCase = true) -> R.drawable.snow
             else -> R.drawable.splash_img
         }
     }
