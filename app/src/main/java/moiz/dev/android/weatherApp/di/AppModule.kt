@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-    private const val baseUrl = "https://api.weatherapi.com/v1/"
+    private const val baseUrl = "https://weather.visualcrossing.com/"
 
     @Provides
     @Singleton

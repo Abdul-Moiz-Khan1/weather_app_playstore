@@ -61,7 +61,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import moiz.dev.android.weatherApp.R
 import moiz.dev.android.weatherApp.Utils.getDayOfWeek
 import moiz.dev.android.weatherApp.data.model.DailyForecastItem
-import moiz.dev.android.weatherApp.data.model.response.Weather
+import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.ui.theme.cards_bg
 import moiz.dev.android.weatherApp.ui.theme.grad_home_above
 import moiz.dev.android.weatherApp.ui.theme.grad_home_below
@@ -78,11 +78,11 @@ fun Home(
     val context = LocalContext.current
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
-    Log.d("CatchError_size", forcast.value?.)
+    Log.d("CatchError_size", forcast?.value?.days?.size.toString())
     if (forcast.value == null) {
-//        showLoading()
+        showLoading()
     } else {
-//        ShowUi(forcast.value)
+        ShowUi(forcast.value)
     }
 
 }
@@ -113,7 +113,7 @@ fun showLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ShowUi(forcast: Weather?) {
+fun ShowUi(forcast: ApiResponse?) {
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -134,130 +134,154 @@ fun ShowUi(forcast: Weather?) {
 
         val dailyForecastList = listOf<DailyForecastItem>(
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(0)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(0)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(0)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[0]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[0]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[0]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(1)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(1)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(1)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[1]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[1]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[1]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(2)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(2)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(2)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[2]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[2]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[2]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(3)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(3)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(3)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[3]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[3]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[3]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(4)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(4)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(4)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[4]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[4]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[4]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(5)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(5)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(5)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[5]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[5]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[5]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(6)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(6)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(6)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[6]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[6]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[6]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(7)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(7)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(7)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[7]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[7]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[7]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(8)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(8)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(8)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[8]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[8]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[8]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(9)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(9)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(9)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[9]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[9]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[9]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(10)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(10)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(10)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[10]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[10]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[10]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(11)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(11)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(11)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[11]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[12]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[12]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(12)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(12)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(12)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[12]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[12]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[12]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(13)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(13)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(13)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[13]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[13]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[13]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(14)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(14)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(14)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[14]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[14]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[14]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(15)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(15)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(15)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[15]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[15]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[15]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(16)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(16)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(16)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[16]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[16]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[16]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(17)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(17)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(17)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[17]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[17]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[17]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(18)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(18)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(18)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[18]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[18]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[18]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(19)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(19)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(19)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[19]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[19]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[19]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(20)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(20)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(20)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[20]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[20]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[20]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(21)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(21)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(21)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[21]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[21]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[21]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(22)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(22)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(22)?.temp_c.toString(),
-            ),
+                forcast?.days?.get(0)?.hours[22]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[22]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[22]?.temp.toString(),
+
+                ),
             DailyForecastItem(
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(23)?.time.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(23)?.condition?.icon.toString(),
-                forcast?.forecast?.forecastday?.get(0)?.hour?.get(23)?.temp_c.toString(),
+                forcast?.days?.get(0)?.hours[23]?.datetime.toString(),
+                forcast?.days?.get(0)?.hours[23]?.icon.toString(),
+                forcast?.days?.get(0)?.hours[23]?.temp.toString(),
             ),
-        )
+
+            )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
 
-            "${forcast?.location?.name}",
+            "${forcast?.address}",
             color = Color.Gray,
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -280,7 +304,7 @@ fun ShowUi(forcast: Weather?) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(getImage(forcast?.current?.condition?.text.toString())),
+                    painter = painterResource(getImage(forcast?.currentConditions?.conditions.toString())),
                     contentDescription = "null",
                     modifier = Modifier
                         .width(200.dp)
@@ -289,7 +313,7 @@ fun ShowUi(forcast: Weather?) {
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    "Feels like ${forcast?.current?.feelslike_c}°C",
+                    "Feels like ${forcast?.currentConditions?.feelslike}°C",
                     fontSize = 12.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Light,
@@ -308,7 +332,7 @@ fun ShowUi(forcast: Weather?) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    "${forcast?.current?.temp_c}°",
+                    "${forcast?.currentConditions?.temp}°",
                     fontSize = 60.sp,
                     textAlign = TextAlign.Center,
                     style = TextStyle(
@@ -321,14 +345,14 @@ fun ShowUi(forcast: Weather?) {
                     )
                 )
                 Text(
-                    "${forcast?.current?.condition?.text}",
+                    "${forcast?.currentConditions?.conditions}",
                     fontSize = 12.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Light
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    "Wind ${forcast?.current?.wind_kph} Km/h",
+                    "Wind ${forcast?.currentConditions?.windspeed} Km/h",
                     fontSize = 12.sp,
                     color = Color.Gray,
                     fontWeight = FontWeight.Light
@@ -354,9 +378,9 @@ fun ShowUi(forcast: Weather?) {
                 attribute(
                     R.drawable.precipitation,
                     "Precipitation",
-                    "${forcast?.current?.precip_mm} mm"
+                    "${forcast?.currentConditions?.precip} mm"
                 )
-                attribute(R.drawable.wind, "Wind", "${forcast?.current?.wind_kph} Km/h")
+                attribute(R.drawable.wind, "Wind", "${forcast?.currentConditions?.windspeed} Km/h")
 
 
             }
@@ -365,12 +389,16 @@ fun ShowUi(forcast: Weather?) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                attribute(R.drawable.humidity, "Humidity", "${forcast?.current?.humidity}%")
+                attribute(
+                    R.drawable.humidity,
+                    "Humidity",
+                    "${forcast?.currentConditions?.humidity}%"
+                )
 
                 attribute(
                     R.drawable.sunset,
                     "Sunset",
-                    "${forcast?.forecast?.forecastday[0]?.astro?.sunset}"
+                    "${forcast?.currentConditions?.sunset}"
                 )
 
             }
@@ -386,7 +414,7 @@ fun ShowUi(forcast: Weather?) {
 }
 
 @Composable
-fun WeeklyForecastCard(forcast: Weather?) {
+fun WeeklyForecastCard(forcast: ApiResponse?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -411,67 +439,14 @@ fun WeeklyForecastCard(forcast: Weather?) {
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[0]?.date.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.mintemp_c.toString(),
-        )
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[1]?.date.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.mintemp_c.toString(),
-        )
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[2]?.date.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.mintemp_c.toString(),
-        )
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[0]?.date.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[0]?.day?.mintemp_c.toString(),
-        )
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[1]?.date.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[1]?.day?.mintemp_c.toString(),
-        )
-        WeeklyForecastView(
-            forcast?.forecast?.forecastday[2]?.date.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.condition?.text.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.maxtemp_c.toString(),
-            forcast?.forecast?.forecastday[2]?.day?.mintemp_c.toString(),
-        )
-//        WeeklyForecastView(
-//            forcast?.forecast?.forecastday[3]?.date.toString(),
-//            forcast?.forecast?.forecastday[3]?.day?.condition?.text.toString(),
-//            forcast?.forecast?.forecastday[3]?.day?.maxtemp_c.toString(),
-//            forcast?.forecast?.forecastday[3]?.day?.mintemp_c.toString(),
-//        )
-//        WeeklyForecastView(
-//            forcast?.forecast?.forecastday[4]?.date.toString(),
-//            forcast?.forecast?.forecastday[4]?.day?.condition?.text.toString(),
-//            forcast?.forecast?.forecastday[4]?.day?.maxtemp_c.toString(),
-//            forcast?.forecast?.forecastday[4]?.day?.mintemp_c.toString(),
-//        )
-//        WeeklyForecastView(
-//            forcast?.forecast?.forecastday[5]?.date.toString(),
-//            forcast?.forecast?.forecastday[5]?.day?.condition?.text.toString(),
-//            forcast?.forecast?.forecastday[5]?.day?.maxtemp_c.toString(),
-//            forcast?.forecast?.forecastday[5]?.day?.mintemp_c.toString(),
-//        )
-//        WeeklyForecastView(
-//            forcast?.forecast?.forecastday[6]?.date.toString(),
-//            forcast?.forecast?.forecastday[6]?.day?.condition?.text.toString(),
-//            forcast?.forecast?.forecastday[6]?.day?.maxtemp_c.toString(),
-//            forcast?.forecast?.forecastday[6]?.day?.mintemp_c.toString(),
-//        )
-
+        for (i in 0..6) {
+            WeeklyForecastView(
+                forcast?.days[i]?.datetime.toString(),
+                forcast?.days[i]?.conditions.toString(),
+                forcast?.days[i]?.tempmax.toString(),
+                forcast?.days[i]?.tempmin.toString(),
+            )
+        }
 
     }
 }
@@ -556,19 +531,11 @@ fun dailyForecastView(item: DailyForecastItem) {
             )
 
             Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data("https:${item.img}")
-                        .error(R.drawable.sunny)
-                        .placeholder(R.drawable.sunny)
-                        .crossfade(true)
-                        .build()
-                ),
-                contentDescription = "Item Image",
-                modifier = Modifier
-                    .size(70.dp),
-                contentScale = ContentScale.Crop
+                painter = painterResource(getImage(item.img)),
+                null,
+                modifier = Modifier.size(70.dp)
             )
+
 
             Text(
                 fontSize = 14.sp,
@@ -616,7 +583,7 @@ fun DetailsCard(modifier: Modifier = Modifier) {
             )
             .padding(16.dp)
     ) {}
-    
+
 }
 
 @Composable

@@ -25,7 +25,6 @@ object Utils {
             Log.e("LocationError_Utils", "Permission denied: ${e.message}")
         }
     }
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getDayOfWeek(dateString: String): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val date = LocalDate.parse(dateString, formatter)

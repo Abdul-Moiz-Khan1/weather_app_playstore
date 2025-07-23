@@ -2,7 +2,7 @@ package moiz.dev.android.weatherApp.data.repository
 
 import android.util.Log
 import moiz.dev.android.weatherApp.data.local.WeatherDao
-import moiz.dev.android.weatherApp.data.model.response.Weather
+import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.data.remote.ApiInterface
 import javax.inject.Inject
 
@@ -10,9 +10,9 @@ class WeatherRepository @Inject constructor(
     private val api: ApiInterface,
     private val dao: WeatherDao
 ) {
-    suspend fun getForecast(city: String, days: Int): Weather? {
+    suspend fun getForecast(city: String): ApiResponse? {
         try {
-            val response = api.getForecast("dce5eb96aefc449cb6a100421251906", city, days)
+            val response = api.getForecast(city, "metric", "NTG86NK4QTHXDTMVDA85KCQ6A", "json")
             Log.d("CatchError,intry", response.toString())
             dao.insertWeather(response)
             return response
@@ -23,7 +23,7 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-    suspend fun getCachedData(): Weather? {
+    suspend fun getCachedData(): ApiResponse? {
         val response = dao.getCacheWeather()
         return response
     }

@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import moiz.dev.android.weatherApp.data.model.response.Weather
 import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.data.repository.WeatherRepository
 import javax.inject.Inject

@@ -2,30 +2,54 @@ package moiz.dev.android.weatherApp.data.local
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson
-import moiz.dev.android.weatherApp.data.model.response.Current
-import moiz.dev.android.weatherApp.data.model.response.Forecast
-import moiz.dev.android.weatherApp.data.model.response.Location
+import com.google.gson.reflect.TypeToken
+import moiz.dev.android.weatherApp.data.model.weatherResponse.CurrentConditions
+import moiz.dev.android.weatherApp.data.model.weatherResponse.Day
+import moiz.dev.android.weatherApp.data.model.weatherResponse.Stations
 
-class TypeConvertors {
+class WeatherTypeConverters {
 
     private val gson = Gson()
 
     @TypeConverter
-    fun fromCurrent(current: Current): String = gson.toJson(current)
+    fun fromCurrentConditions(value: CurrentConditions): String {
+        return gson.toJson(value)
+    }
 
     @TypeConverter
-    fun toCurrent(current: String): Current = gson.fromJson(current, Current::class.java)
+    fun toCurrentConditions(value: String): CurrentConditions {
+        return gson.fromJson(value, CurrentConditions::class.java)
+    }
 
     @TypeConverter
-    fun fromForecast(forecast: Forecast): String = gson.toJson(forecast)
+    fun fromDayList(value: List<Day>): String {
+        return gson.toJson(value)
+    }
 
     @TypeConverter
-    fun toForecast(forecast: String): Forecast = gson.fromJson(forecast, Forecast::class.java)
+    fun toDayList(value: String): List<Day> {
+        val type = object : TypeToken<List<Day>>() {}.type
+        return gson.fromJson(value, type)
+    }
 
     @TypeConverter
-    fun fromLocation(location: Location): String = gson.toJson(location)
+    fun fromStations(value: Stations): String {
+        return gson.toJson(value)
+    }
 
     @TypeConverter
-    fun toLocation(location: String): Location = gson.fromJson(location, Location::class.java)
+    fun toStations(value: String): Stations {
+        return gson.fromJson(value, Stations::class.java)
+    }
 
+    @TypeConverter
+    fun fromAnyList(value: List<Any>): String {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toAnyList(value: String): List<Any> {
+        val type = object : TypeToken<List<Any>>() {}.type
+        return gson.fromJson(value, type)
+    }
 }
