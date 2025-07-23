@@ -61,7 +61,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                     Log.d("Location", "Latitude: $lat, Longitude: $lon")
                 }
 
-                viewModel.loadForcast("Rawalpindi" , 7)
+                viewModel.loadForcast("London" , 7)
             }
         }
     LaunchedEffect(Unit) {

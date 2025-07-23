@@ -78,7 +78,6 @@ fun Home(
     navController: NavController,
     viewModel: WeatherViewModel
 ) {
-    viewModel.loadCacheData()
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
     Log.d("CatchError_size", forcast?.value?.days?.size.toString())
