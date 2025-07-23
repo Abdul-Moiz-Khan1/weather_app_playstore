@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "moiz.dev.android.weatherApp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -101,5 +101,8 @@ dependencies {
 
     //loaction
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    //gcoil
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
 }

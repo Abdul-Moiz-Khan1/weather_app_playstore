@@ -145,9 +145,6 @@ fun OnBoarding(navController: NavController) {
                     )
                 }
             }
-
-            // Progress Button
-
         }
     }
 }
@@ -156,7 +153,7 @@ fun OnBoarding(navController: NavController) {
 
 @Composable
 fun CircularProgressButton(
-    progress: Float, // e.g., 0.25f, 0.5f, 0.75f, 1f
+    progress: Float,
     onClick: () -> Unit
 ) {
     Box(

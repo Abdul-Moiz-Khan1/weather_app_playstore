@@ -53,26 +53,27 @@ import moiz.dev.android.weatherApp.utils.Routes
 fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
     val context = LocalContext.current
-
     val forecast by viewModel.forecast.observeAsState()
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 getCurrentLocation(context) { lat, lon ->
                     Log.d("Location", "Latitude: $lat, Longitude: $lon")
-                    viewModel.loadCacheData()
                 }
+
+                viewModel.loadForcast("Rawalpindi" , 7)
             }
         }
     LaunchedEffect(Unit) {
         launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
     LaunchedEffect(forecast) {
-        if (forecast != null) {
+        if(forecast!=null){
             navController.navigate(Routes.ONBOARDING) {
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }
+
     }
 
 

@@ -8,19 +8,20 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import moiz.dev.android.weatherApp.data.model.response.Weather
+import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.data.repository.WeatherRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(private val repository: WeatherRepository) :
     ViewModel() {
-    private val _forcast = MutableLiveData<Weather?>()
-    val forecast: LiveData<Weather?> = _forcast
+    private val _forcast = MutableLiveData<ApiResponse?>()
+    val forecast: LiveData<ApiResponse?> = _forcast
 
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {
             try {
-                val data = repository.getForecast(city, days)
+                val data = repository.getForecast(city)
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
@@ -33,7 +34,7 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
     fun loadForecastByLocation(lat: String, lng: String) {
         viewModelScope.launch {
             try {
-                val data = repository.getForecast("$lat,$lng", 7)
+                val data = repository.getForecast("$lat,$lng")
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
@@ -49,9 +50,9 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
             try {
                 val data = repository.getCachedData()
                 _forcast.value = data
-                Log.d("CatchError,inViewModel", data.toString())
+                Log.d("CatchError_loadcache,inViewModel", data.toString())
             } catch (e: Exception) {
-                Log.d("CatchError,inViewModel", e.message.toString())
+                Log.d("CatchError,inViewModel_loadcache", e.message.toString())
             }
         }
     }
