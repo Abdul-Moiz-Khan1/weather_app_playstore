@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
+import moiz.dev.android.weatherApp.presentation.view.Details
 import moiz.dev.android.weatherApp.presentation.view.Home
 import moiz.dev.android.weatherApp.presentation.view.OnBoarding
 import moiz.dev.android.weatherApp.presentation.view.Splash
@@ -37,11 +38,12 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.HOME
+                    startDestination = Routes.SPLASH
                 ) {
-                    composable(Routes.SPLASH) { Splash(navController,viewModel) }
-                    composable(Routes.HOME) { Home(navController,viewModel) }
+                    composable(Routes.SPLASH) { Splash(navController, viewModel) }
+                    composable(Routes.HOME) { Home(navController, viewModel) }
                     composable(Routes.ONBOARDING) { OnBoarding(navController) }
+                    composable(Routes.DETAILS) { Details(navController, viewModel) }
 
                 }
             }

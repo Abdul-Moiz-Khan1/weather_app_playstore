@@ -2,8 +2,23 @@ package moiz.dev.android.weatherApp.utils
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.android.gms.location.LocationServices
 import moiz.dev.android.weatherApp.R
+import moiz.dev.android.weatherApp.ui.theme.grad_home_above
+import moiz.dev.android.weatherApp.ui.theme.grad_home_below
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -46,6 +61,33 @@ object Utils {
             condition.contains("blizzard", ignoreCase = true) -> R.drawable.snow
             else -> R.drawable.splash_img
         }
+    }
+
+    fun tempToInt(temp: Double?): Int? {
+        return temp?.toInt()
+    }
+    @Composable
+    fun ShowLoading() {
+        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.weather_loading2))
+        val progress by animateLottieCompositionAsState(composition, iterations = Int.MAX_VALUE)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            grad_home_above,
+                            grad_home_above,
+                            grad_home_below
+                        )
+                    )
+                ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LottieAnimation(composition, progress)
+        }
+
     }
 
 }

@@ -1,11 +1,10 @@
 package moiz.dev.android.weatherApp.presentation.view
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -31,32 +29,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
@@ -72,7 +62,9 @@ import moiz.dev.android.weatherApp.ui.theme.main_card_grad_bottom
 import moiz.dev.android.weatherApp.ui.theme.main_card_grad_top
 import moiz.dev.android.weatherApp.ui.theme.text_left_grad
 import moiz.dev.android.weatherApp.ui.theme.text_right_grad
+import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils
+import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
 fun Home(
@@ -82,42 +74,17 @@ fun Home(
     viewModel.loadCacheData()
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
-    Log.d("CatchError_size", forcast?.value?.days?.size.toString())
+    Log.d("CatchError_size", forcast.value?.days?.size.toString())
     if (forcast.value == null) {
-        showLoading()
+        Utils.ShowLoading()
     } else {
-        ShowUi(forcast.value)
-    }
-
-}
-
-
-@Composable
-fun showLoading(modifier: Modifier = Modifier) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.weather_loading2))
-    val progress by animateLottieCompositionAsState(composition, iterations = Int.MAX_VALUE)
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        grad_home_above,
-                        grad_home_above,
-                        grad_home_below
-                    )
-                )
-            ),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        LottieAnimation(composition, progress)
+        ShowUi(navController , forcast.value)
     }
 
 }
 
 @Composable
-fun ShowUi(forcast: ApiResponse?) {
+fun ShowUi(navController: NavController , forcast: ApiResponse?) {
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -338,7 +305,7 @@ fun ShowUi(forcast: ApiResponse?) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "${forcast?.currentConditions?.temp}°",
+                        "${Utils.tempToInt(forcast?.currentConditions?.temp)}°",
                         fontSize = 60.sp,
                         textAlign = TextAlign.Center,
                         style = TextStyle(
@@ -367,7 +334,6 @@ fun ShowUi(forcast: ApiResponse?) {
         }
 
         Custom_divider()
-
         Spacer(modifier = Modifier.height(8.dp))
         Column(//attributes
             modifier = Modifier
@@ -415,7 +381,7 @@ fun ShowUi(forcast: ApiResponse?) {
         Spacer(modifier = Modifier.height(8.dp))
         WeeklyForecastCard(forcast)
         Spacer(modifier = Modifier.height(8.dp))
-        GotoForecastCard()
+        GotoForecastCard(navController)
         Spacer(modifier = Modifier.height(8.dp))
         DetailsCard(forcast)
 
@@ -434,6 +400,8 @@ fun WeeklyForecastCard(forcast: ApiResponse?) {
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         main_card_grad_top,
+                        main_card_grad_bottom,
+                        main_card_grad_bottom,
                         main_card_grad_bottom
                     )
                 )
@@ -551,7 +519,7 @@ fun DailyForecastView(item: DailyForecastItem) {
             Text(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                text = item.temp,
+                text = tempToInt(item.temp.toDouble()).toString() + "°",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White
             )
@@ -572,8 +540,8 @@ fun WeeklyForecastView(date: String, img: String, temp_high: String, temp_low: S
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
-        Text(text = "${temp_high}°C", color = Color.White)
-        Text(text = "${temp_low}°C", color = Color.White)
+        Text(text = "${tempToInt(temp_high.toDouble())}°C", color = Color.White)
+        Text(text = "${tempToInt(temp_low.toDouble())}°C", color = Color.White)
     }
 }
 
@@ -588,6 +556,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         main_card_grad_top,
+                        main_card_grad_bottom,
                         main_card_grad_bottom
                     )
                 )
@@ -632,7 +601,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.feelslike.toString(),
+                        forcast?.currentConditions?.feelslike.toString() + "°",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -649,7 +618,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.humidity.toString(),
+                        tempToInt(forcast?.currentConditions?.humidity).toString() + "%",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -666,7 +635,11 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.visibility.toString(),
+                        "${
+                            tempToInt(
+                                forcast?.currentConditions?.visibility.toString().toDouble()
+                            )
+                        }m",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -700,7 +673,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.dew.toString(),
+                        "${tempToInt(forcast?.currentConditions?.dew)}°",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -718,14 +691,18 @@ fun DetailsCard(forcast: ApiResponse?) {
 }
 
 @Composable
-fun GotoForecastCard() {
+fun GotoForecastCard(navController: NavController) {
     Row(
         modifier = Modifier
+            .clickable {
+                navController.navigate(Routes.DETAILS)
+            }
             .fillMaxWidth()
             .clip(RoundedCornerShape(40.dp))
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
+                        main_card_grad_bottom,
                         main_card_grad_bottom,
                         main_card_grad_top
                     )
@@ -778,7 +755,6 @@ fun GotoForecastCard() {
     }
 }
 
-
 @Composable
 fun Custom_divider() {
     Divider(
@@ -789,8 +765,8 @@ fun Custom_divider() {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun preview(modifier: Modifier = Modifier) {
-    GotoForecastCard()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun preview(modifier: Modifier = Modifier) {
+//    GotoForecastCard()
+//}
