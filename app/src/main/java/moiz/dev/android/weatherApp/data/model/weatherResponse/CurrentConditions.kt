@@ -1,7 +1,7 @@
 package moiz.dev.android.weatherApp.data.model.weatherResponse
 
 data class CurrentConditions(
-    val cloudcover: Int,
+    val cloudcover: Any,
     val conditions: String,
     val datetime: String,
     val datetimeEpoch: Int,

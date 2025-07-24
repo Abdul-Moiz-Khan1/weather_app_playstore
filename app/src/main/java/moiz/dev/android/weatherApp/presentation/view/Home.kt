@@ -1,6 +1,7 @@
 package moiz.dev.android.weatherApp.presentation.view
 
 import android.util.Log
+import android.widget.EditText
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -64,6 +66,7 @@ import moiz.dev.android.weatherApp.ui.theme.text_left_grad
 import moiz.dev.android.weatherApp.ui.theme.text_right_grad
 import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils
+import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
@@ -78,13 +81,13 @@ fun Home(
     if (forcast.value == null) {
         Utils.ShowLoading()
     } else {
-        ShowUi(navController , forcast.value)
+        ShowUi(navController, forcast.value)
     }
 
 }
 
 @Composable
-fun ShowUi(navController: NavController , forcast: ApiResponse?) {
+fun ShowUi(navController: NavController, forcast: ApiResponse?) {
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -102,152 +105,7 @@ fun ShowUi(navController: NavController , forcast: ApiResponse?) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val dailyForecastList = listOf<DailyForecastItem>(
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[0]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[0]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[0]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[1]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[1]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[1]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[2]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[2]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[2]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[3]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[3]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[3]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[4]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[4]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[4]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[5]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[5]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[5]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[6]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[6]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[6]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[7]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[7]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[7]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[8]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[8]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[8]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[9]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[9]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[9]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[10]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[10]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[10]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[11]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[12]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[12]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[12]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[12]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[12]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[13]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[13]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[13]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[14]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[14]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[14]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[15]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[15]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[15]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[16]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[16]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[16]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[17]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[17]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[17]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[18]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[18]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[18]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[19]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[19]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[19]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[20]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[20]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[20]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[21]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[21]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[21]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[22]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[22]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[22]?.temp.toString(),
-
-                ),
-            DailyForecastItem(
-                forcast?.days?.get(0)?.hours[23]?.datetime.toString(),
-                forcast?.days?.get(0)?.hours[23]?.icon.toString(),
-                forcast?.days?.get(0)?.hours[23]?.temp.toString(),
-            ),
-
-            )
+        val dailyForecastList = getDailyForecastItems(forcast?.days?.get(0))
         Spacer(modifier = Modifier.height(8.dp))
         Text(
 
@@ -436,7 +294,11 @@ fun ScrollableRow(list: List<DailyForecastItem>) {
             .fillMaxWidth()
     ) {
         items(list) { item: DailyForecastItem ->
-            DailyForecastView(item)
+            DailyForecastView(
+                item, modifier = Modifier
+                    .height(160.dp)
+                    .width(100.dp), 70
+            )
         }
     }
 }
@@ -459,17 +321,13 @@ fun Attribute(image: Int, attribute: String, value: String) {
 }
 
 @Composable
-fun DailyForecastView(item: DailyForecastItem) {
+fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int) {
     Box(
-        modifier = Modifier
-            .height(160.dp)
-            .width(100.dp)
+        modifier = modifier
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(8.dp)
-                .height(160.dp)
-                .width(100.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(
                     brush = Brush.verticalGradient(
@@ -512,7 +370,7 @@ fun DailyForecastView(item: DailyForecastItem) {
             Image(
                 painter = painterResource(Utils.getImage(item.img)),
                 null,
-                modifier = Modifier.size(70.dp)
+                modifier = Modifier.size(iconSize.dp)
             )
 
 
@@ -635,11 +493,12 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        "${
+                        forcast?.currentConditions?.visibility?.let {
                             tempToInt(
-                                forcast?.currentConditions?.visibility.toString().toDouble()
+                                it.toString().toDouble()
                             )
-                        }m",
+                            "m"
+                        } ?: "Good",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal

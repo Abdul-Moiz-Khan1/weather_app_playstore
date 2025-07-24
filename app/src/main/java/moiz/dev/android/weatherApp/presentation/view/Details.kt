@@ -1,6 +1,13 @@
 package moiz.dev.android.weatherApp.presentation.view
 
 import android.graphics.SweepGradient
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,12 +23,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,12 +67,13 @@ import moiz.dev.android.weatherApp.ui.theme.main_card_grad_bottom
 import moiz.dev.android.weatherApp.ui.theme.main_card_grad_top
 import moiz.dev.android.weatherApp.utils.Utils
 import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
+import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.getDayOfWeek
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
 fun Details(navController: NavController, viewModel: WeatherViewModel) {
-    viewModel.loadCacheData()
+//    viewModel.loadCacheData()
     val forecast = viewModel.forecast.observeAsState()
 
     if (forecast.value != null) {
@@ -204,13 +219,10 @@ fun DetailedWeeklyForecastCard(forcast: ApiResponse?) {
             Text("High  |  Low", color = Color.Gray)
         }
         Spacer(modifier = Modifier.height(8.dp))
-
         for (i in 0..6) {
             DetailedWeeklyForecastView(
-                forcast?.days[i]?.datetime.toString(),
-                forcast?.days[i]?.conditions.toString(),
-                forcast?.days[i]?.tempmax.toString(),
-                forcast?.days[i]?.tempmin.toString(),
+                forcast,
+                i,
             )
         }
 
@@ -218,29 +230,50 @@ fun DetailedWeeklyForecastCard(forcast: ApiResponse?) {
 }
 
 @Composable
-fun DetailedWeeklyForecastView(date: String, img: String, temp_high: String, temp_low: String) {
+fun DetailedWeeklyForecastView(forcast: ApiResponse?, i: Int) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+
+        var isRotated by remember { mutableStateOf(false) }
+        val rotationAngle by animateFloatAsState(
+            targetValue = if (isRotated) 270f else 90f,
+            animationSpec = tween(durationMillis = 300)
+        )
         Image(
             painter = painterResource(R.drawable.next),
             modifier = Modifier
-                .rotate(90f)
+                .rotate(rotationAngle)
                 .clickable {
-
+                    isRotated = !isRotated
                 },
             contentDescription = null
         )
-        Text(text = getDayOfWeek(date), color = Color.White)
+        if (isRotated) {
+            ShowHourlyData(forcast , i)
+        }
+        Text(text = getDayOfWeek(forcast?.days[i]?.datetime.toString()), color = Color.White)
         Image(
-            painter = painterResource(id = Utils.getImage(img)),
+            painter = painterResource(id = Utils.getImage(forcast?.days[i]?.conditions.toString())),
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
-        Text(text = "${tempToInt(temp_high.toDouble())}°C", color = Color.White)
-        Text(text = "${tempToInt(temp_low.toDouble())}°C", color = Color.White)
+        Text(
+            text = "${
+                tempToInt(
+                    forcast?.days[i]?.tempmax.toString().toDouble()
+                )
+            }°C", color = Color.White
+        )
+        Text(
+            text = "${
+                tempToInt(
+                    forcast?.days[i]?.tempmin.toString().toDouble()
+                )
+            }°C", color = Color.White
+        )
     }
 }
 
@@ -263,7 +296,7 @@ fun ShowUvStatus(uvIndex: Int) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            modifier = Modifier.padding(start = 8.dp , end = 8.dp , top = 8.dp),
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp),
             text = "UV Index",
             textAlign = TextAlign.Center,
             fontSize = 22.sp,
@@ -271,7 +304,7 @@ fun ShowUvStatus(uvIndex: Int) {
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            modifier = Modifier.padding(start = 8.dp , end = 8.dp , bottom = 8.dp),
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
             text = getUvDescription(uvIndex),
             textAlign = TextAlign.Center,
             fontSize = 16.sp,
@@ -336,6 +369,37 @@ fun UVIndexIndicator(
     }
 }
 
+@Composable
+fun ShowHourlyData(forecast: ApiResponse? , index:Int) {
+    val list = getDailyForecastItems(forecast?.days?.get(index))
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { -20 }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
+    ) {
+        Column(modifier = Modifier.padding(4.dp)) {
+            Text(getDayOfWeek(forecast?.days?.get(index)?.datetime.toString()), fontSize = 20.sp, color = Color.White)
+            ScrollableData(list)
+        }
+
+    }
+}
+
+@Composable
+fun ScrollableData(list: List<DailyForecastItem>) {
+    LazyRow(
+        modifier = Modifier
+            .padding(top = 16.dp, start = 8.dp)
+    ) {
+        items(list) { item: DailyForecastItem ->
+            DailyForecastView(
+                item, modifier = Modifier
+                    .height(120.dp)
+                    .width(70.dp), 35
+            )
+        }
+    }
+}
 
 fun getUvDescription(index: Int): String {
     return when (index) {

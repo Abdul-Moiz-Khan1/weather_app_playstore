@@ -20,7 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,12 +49,14 @@ import moiz.dev.android.weatherApp.utils.Utils.getCurrentLocation
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
 import moiz.dev.android.weatherApp.ui.theme.left_grad
 import moiz.dev.android.weatherApp.utils.Routes
+import moiz.dev.android.weatherApp.utils.Utils.hasSeenOnboarding
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
     val context = LocalContext.current
+    var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding(context)) }
     val forecast by viewModel.forecast.observeAsState()
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -60,8 +64,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                 getCurrentLocation(context) { lat, lon ->
                     Log.d("Location", "Latitude: $lat, Longitude: $lon")
                 }
-
-                viewModel.loadForcast("London" , 7)
+                viewModel.loadForcast("Rawalpindi" , 7)
             }
         }
     LaunchedEffect(Unit) {

@@ -17,12 +17,15 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.android.gms.location.LocationServices
 import moiz.dev.android.weatherApp.R
+import moiz.dev.android.weatherApp.data.model.DailyForecastItem
+import moiz.dev.android.weatherApp.data.model.weatherResponse.Day
 import moiz.dev.android.weatherApp.ui.theme.grad_home_above
 import moiz.dev.android.weatherApp.ui.theme.grad_home_below
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.core.content.edit
 
 object Utils {
     fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit) {
@@ -66,6 +69,19 @@ object Utils {
     fun tempToInt(temp: Double?): Int? {
         return temp?.toInt()
     }
+
+    fun getDailyForecastItems(day: Day?): List<DailyForecastItem> {
+        val hours = day?.hours ?: return emptyList()
+
+        return hours.take(24).map { hour ->
+            DailyForecastItem(
+                time = hour.datetime ?: "--:--",
+                img = hour.icon ?: "unknown",
+                temp = hour.temp?.toString() ?: "--"
+            )
+        }
+    }
+
     @Composable
     fun ShowLoading() {
         val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.weather_loading2))
@@ -88,6 +104,16 @@ object Utils {
             LottieAnimation(composition, progress)
         }
 
+    }
+
+    fun hasSeenOnboarding(context: Context): Boolean {
+        val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
+        return prefs.getBoolean("seen", false)
+    }
+
+    fun setSeenOnboarding(context: Context) {
+        val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
+        prefs.edit { putBoolean("seen", true) }
     }
 
 }
