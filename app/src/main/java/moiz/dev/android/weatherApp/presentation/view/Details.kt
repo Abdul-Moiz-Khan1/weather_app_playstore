@@ -1,6 +1,7 @@
 package moiz.dev.android.weatherApp.presentation.view
 
 import android.graphics.SweepGradient
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -31,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -50,12 +52,14 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toAndroidRectF
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import moiz.dev.android.weatherApp.R
 import moiz.dev.android.weatherApp.data.model.DailyForecastItem
@@ -69,12 +73,16 @@ import moiz.dev.android.weatherApp.utils.Utils
 import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
 import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.getDayOfWeek
+import moiz.dev.android.weatherApp.utils.Utils.getLocationName
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
-fun Details(navController: NavController, viewModel: WeatherViewModel) {
+fun Details(navController: NavController , viewModel: WeatherViewModel) {
+//    viewModel.loadCacheData()
+
 //    viewModel.loadCacheData()
     val forecast = viewModel.forecast.observeAsState()
+    Log.d("forecast" , forecast.value.toString())
 
     if (forecast.value != null) {
         ShowData(navController, forecast.value!!)
@@ -87,6 +95,8 @@ fun Details(navController: NavController, viewModel: WeatherViewModel) {
 
 @Composable
 fun ShowData(navController: NavController, forecast: ApiResponse) {
+
+
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -113,6 +123,21 @@ fun ShowData(navController: NavController, forecast: ApiResponse) {
 
 @Composable
 fun ShowBasics(navController: NavController, forecast: ApiResponse) {
+    val address = forecast?.address
+    var locationName by remember { mutableStateOf<String?>(address) }
+    val context = LocalContext.current
+    LaunchedEffect(address) {
+        if (!forecast?.address.isNullOrEmpty() && address.contains(",")) {
+            val parts = address.split(",")
+            if (parts.size == 2) {
+                val lat = parts[0].trim().toDoubleOrNull()
+                val lon = parts[1].trim().toDoubleOrNull()
+                if (lat != null && lon != null) {
+                    locationName = getLocationName(context, lat, lon)
+                }
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,7 +161,7 @@ fun ShowBasics(navController: NavController, forecast: ApiResponse) {
             )
         }
         Text(
-            forecast.address.toString(),
+            text = locationName ?: address ?: "Unknown location",
             color = Color.White,
             fontSize = 26.sp,
             fontFamily = FontFamily.SansSerif,

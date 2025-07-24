@@ -2,6 +2,7 @@ package moiz.dev.android.weatherApp.presentation.view
 
 import android.util.Log
 import android.widget.EditText
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,11 +28,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -48,7 +56,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
@@ -67,27 +77,158 @@ import moiz.dev.android.weatherApp.ui.theme.text_right_grad
 import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils
 import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
+import moiz.dev.android.weatherApp.utils.Utils.getLocationName
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
 fun Home(
-    navController: NavController,
-    viewModel: WeatherViewModel
+    navController: NavController, viewModel: WeatherViewModel
 ) {
-    viewModel.loadCacheData()
+
     val forcast = viewModel.forecast.observeAsState()
     Log.d("CatchError_in_home", forcast.value.toString())
     Log.d("CatchError_size", forcast.value?.days?.size.toString())
-    if (forcast.value == null) {
-        Utils.ShowLoading()
+    Log.d("CatchErrorHome_permissions", "location ${viewModel.locationPermission}, internet ${viewModel.internet}")
+    if (!viewModel.internet) {
+        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
+        Log.d("CatchError_in_home", "no internet")
+
+        viewModel.loadCacheData()
+
+        if (forcast.value == null) {
+            ShowNoData(
+                R.drawable.no_internet,
+                "No Internet Connection",
+                false,
+                viewModel
+            )
+        } else {
+            ShowUi(navController, forcast.value, viewModel)
+        }
+
     } else {
-        ShowUi(navController, forcast.value)
+        Log.d("CatchError_in_home", "yes internet")
+        viewModel.loadCacheData()
+        if (!viewModel.locationPermission) {
+            if (forcast.value == null) {
+                Log.d("CatchError_in_home", "no location search city")
+                ShowNoData(
+                    R.drawable.no_location,
+                    "Location Not found\n\nTry searching",
+                    true,
+                    viewModel
+                )
+            } else {
+                ShowUi(navController, forcast.value, viewModel)
+            }
+        } else {
+            Log.d("CatchError_in_home", "yes internet show ui")
+            ShowUi(navController, forcast.value, viewModel)
+        }
     }
+
+//    if (!viewModel.internet) {
+//        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
+//        Log.d("CatchError_in_home", "no internet")
+//        viewModel.loadCacheData()
+//        if (forcast.value == null) {
+//            ShowNoData(R.drawable.no_internet, "No Internet Connection" , false , viewModel)
+//        } else {
+//            ShowUi(navController, forcast.value, viewModel)
+//        }
+//    } else {
+//        Log.d("CatchError_in_home", "yes internet")
+//        if (!viewModel.locationPermission) {
+//            if (forcast.value == null) {
+//                Log.d("CatchError_in_home", "no location search city" )
+//                ShowNoData(R.drawable.no_location, "Location Not found\n\nTry searching", true , viewModel)
+//            }
+//        }else {
+//            Log.d("CatchError_in_home", "yes internet show ui")
+//            ShowUi(navController, forcast.value, viewModel)
+//        }
+//    }
+
 
 }
 
 @Composable
-fun ShowUi(navController: NavController, forcast: ApiResponse?) {
+fun ShowNoData(image: Int, text: String ,searchable:Boolean , viewModel: WeatherViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        grad_home_above,
+                        grad_home_above,
+                        grad_home_below
+                    )
+                )
+            )
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+    ) {
+        if(searchable){
+            CustomSearch(viewModel)
+        }
+        Image(
+            painter = painterResource(image),
+            contentDescription = "",
+            modifier = Modifier.size(300.dp)
+        )
+        Text(
+            text,
+            modifier = Modifier.padding(8.dp),
+            color = Color.White,
+            fontSize = 32.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.SansSerif
+        )
+    }
+}
+
+@Composable
+fun CustomSearch(viewModel: WeatherViewModel) {
+    var searchText by remember { mutableStateOf("") }
+    TextField(
+        value = searchText,
+        onValueChange = { searchText = it },
+        placeholder = { Text("Search location...") },
+        singleLine = true,
+        shape = RoundedCornerShape(30.dp),
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.Gray,
+            focusedContainerColor = cards_bg,
+            unfocusedContainerColor = cards_bg,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = Color.DarkGray,
+            focusedPlaceholderColor = Color.Gray,
+            unfocusedPlaceholderColor = Color.Gray
+        ),
+        modifier = Modifier
+            .fillMaxWidth(0.8f)
+            .padding(4.dp),
+        trailingIcon = {
+            IconButton(onClick = {
+            }) {
+                Icon(
+                    painter = painterResource(R.drawable.search),
+                    contentDescription = null,
+                    tint = Color.Gray, modifier = Modifier.clickable {
+                        viewModel.loadForcast(searchText , 6)
+                    }
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun ShowUi(navController: NavController, forcast: ApiResponse?, viewModel: WeatherViewModel) {
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
@@ -107,16 +248,8 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?) {
     ) {
         val dailyForecastList = getDailyForecastItems(forcast?.days?.get(0))
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        LocationSearchBar(forcast, viewModel)
 
-            "${forcast?.address}",
-            color = Color.Gray,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .clip(shape = RoundedCornerShape(30.dp))
-                .background(cards_bg)
-                .padding(12.dp), textAlign = TextAlign.Center
-        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -228,7 +361,7 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?) {
                 Attribute(
                     R.drawable.sunset,
                     "Sunset",
-                    "${forcast?.currentConditions?.sunset}"
+                    forcast?.currentConditions?.sunset.toString().dropLast(3)
                 )
 
             }
@@ -245,6 +378,97 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?) {
 
     }
 
+}
+
+@Composable
+fun LocationSearchBar(forcast: ApiResponse?, viewModel: WeatherViewModel) {
+    var showSearch by remember { mutableStateOf(false) }
+    var searchText by remember { mutableStateOf("") }
+
+    if (showSearch) {
+        TextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            placeholder = { Text("Search location...") },
+            singleLine = true,
+            shape = RoundedCornerShape(30.dp),
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.Gray,
+                focusedContainerColor = cards_bg,
+                unfocusedContainerColor = cards_bg,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = Color.DarkGray,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            ),
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(4.dp),
+            trailingIcon = {
+                IconButton(onClick = {
+                    showSearch = false
+                }) {
+                    val context = LocalContext.current
+                    Icon(
+                        painter = painterResource(R.drawable.search),
+                        contentDescription = null,
+                        tint = Color.Gray, modifier = Modifier.clickable {
+                            if(!viewModel.internet){
+                                Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show()
+                                return@clickable
+                            }else{
+                                viewModel.loadForcast(searchText, 7)
+                            }
+                        }
+                    )
+                }
+            }
+        )
+
+    } else {
+        val address = forcast?.address
+        var locationName by remember { mutableStateOf<String?>(address) }
+        val context = LocalContext.current
+        LaunchedEffect(address) {
+            if (!forcast?.address.isNullOrEmpty() && address.contains(",")) {
+                val parts = address.split(",")
+                if (parts.size == 2) {
+                    val lat = parts[0].trim().toDoubleOrNull()
+                    val lon = parts[1].trim().toDoubleOrNull()
+                    if (lat != null && lon != null) {
+                        locationName = getLocationName(context, lat, lon)
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .clip(RoundedCornerShape(30.dp))
+                .background(cards_bg)
+                .padding(12.dp)
+                .clickable { /* Optional: maybe open search too */ },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = locationName ?: "Unknown location",
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Image(
+                painter = painterResource(R.drawable.search),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(25.dp)
+                    .clickable {
+                        showSearch = true
+                    }
+            )
+        }
+    }
 }
 
 @Composable
@@ -623,9 +847,9 @@ fun Custom_divider() {
     )
 }
 
-
+//
 //@Preview(showBackground = true)
 //@Composable
 //fun preview(modifier: Modifier = Modifier) {
-//    GotoForecastCard()
+//    ShowNoInternet()
 //}

@@ -1,6 +1,8 @@
 package moiz.dev.android.weatherApp.utils
 
 import android.content.Context
+import android.location.Geocoder
+import android.location.LocationManager
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,15 +28,17 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import androidx.core.content.edit
+import java.io.IOException
 
 object Utils {
-    fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit) {
+    fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit , onError:(Boolean)->Unit) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     onLocation(location.latitude.toString(), location.longitude.toString())
                 } else {
+                    onError(false)
                     Log.e("LocationError_Utils", "Location is null")
                 }
             }
@@ -43,10 +47,19 @@ object Utils {
         }
     }
 
-    fun getDayOfWeek(dateString: String): String {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val date = LocalDate.parse(dateString, formatter)
-        return date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    fun getDayOfWeek(dateString: String?): String {
+        return try {
+            if (dateString.isNullOrBlank() || dateString == "null") {
+                ""
+            } else {
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault())
+                val date = LocalDate.parse(dateString, formatter)
+                date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ""
+        }
     }
 
     fun getImage(condition: String): Int {
@@ -114,6 +127,23 @@ object Utils {
     fun setSeenOnboarding(context: Context) {
         val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
         prefs.edit { putBoolean("seen", true) }
+    }
+
+    fun getLocationName(context: Context, lat: Double, lon: Double): String? {
+        return try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(lat, lon, 1)
+            addresses?.get(0)?.locality
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun isLocationEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
 }

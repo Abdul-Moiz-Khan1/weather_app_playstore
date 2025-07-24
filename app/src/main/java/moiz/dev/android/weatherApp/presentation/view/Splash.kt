@@ -50,6 +50,9 @@ import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
 import moiz.dev.android.weatherApp.ui.theme.left_grad
 import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils.hasSeenOnboarding
+import moiz.dev.android.weatherApp.utils.Utils.isLocationEnabled
+import moiz.dev.android.weatherApp.utils.Utils.setSeenOnboarding
+import okhttp3.Route
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -61,22 +64,47 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
-                getCurrentLocation(context) { lat, lon ->
-                    Log.d("Location", "Latitude: $lat, Longitude: $lon")
+                if (isLocationEnabled(context)) {
+                    getCurrentLocation(context, onLocation = { lat, lon ->
+                        Log.d("Location", "Latitude: $lat, Longitude: $lon")
+                        viewModel.loadForecastByLocation(lat, lon)
+
+                    }, onError = {
+                        Log.d("Location", "Error: $it")
+                        viewModel.locationPermission = false
+                    })
+                } else {
+                    viewModel.locationPermission = false
+                    Toast.makeText(context, "Please enable location services", Toast.LENGTH_LONG)
+                        .show()
                 }
-                viewModel.loadForcast("Rawalpindi" , 7)
+            } else {
+                viewModel.locationPermission = false
+                Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
+
     LaunchedEffect(Unit) {
         launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
     LaunchedEffect(forecast) {
-        if(forecast!=null){
-            navController.navigate(Routes.ONBOARDING) {
-                popUpTo(Routes.SPLASH) { inclusive = true }
+        if (forecast != null) {
+            if (showOnboarding) {
+                setSeenOnboarding(context)
+                navController.navigate(Routes.ONBOARDING) {
+                    popUpTo(Routes.SPLASH) {
+                        inclusive = true
+                    }
+                }
+            } else {
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.SPLASH) {
+                        inclusive = true
+                    }
+                }
             }
-        }
 
+        }
     }
 
 
@@ -89,7 +117,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                         left_grad,
                         androidx.compose.ui.graphics.Color.White,
 
-                    )
+                        )
                 )
             )
             .padding(16.dp),

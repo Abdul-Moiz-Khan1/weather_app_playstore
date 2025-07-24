@@ -1,6 +1,7 @@
 package moiz.dev.android.weatherApp.data.viewModel
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,10 +18,15 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
     private val _forcast = MutableLiveData<ApiResponse?>()
     val forecast: LiveData<ApiResponse?> = _forcast
 
+    var locationPermission: Boolean = true
+    var internet: Boolean = true
+
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {
             try {
-                val data = repository.getForecast(city)
+                val data = repository.getForecast(city, connecton = {
+                    internet = it
+                })
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
@@ -30,10 +36,13 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
             }
         }
     }
+
     fun loadForecastByLocation(lat: String, lng: String) {
         viewModelScope.launch {
             try {
-                val data = repository.getForecast("$lat,$lng")
+                val data = repository.getForecast("$lat,$lng", connecton = {
+                    internet = it
+                })
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
