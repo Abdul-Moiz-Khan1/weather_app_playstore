@@ -98,7 +98,6 @@ fun Home(
             viewModel.loadCacheData()
         }
     }
-
     if (!internet) {
         Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
         Log.d("CatchError_in_home", "no internet")
