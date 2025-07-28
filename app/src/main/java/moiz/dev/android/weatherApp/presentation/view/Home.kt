@@ -76,6 +76,7 @@ import moiz.dev.android.weatherApp.ui.theme.text_left_grad
 import moiz.dev.android.weatherApp.ui.theme.text_right_grad
 import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils
+import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
 import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.getLocationName
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
@@ -86,17 +87,25 @@ fun Home(
 ) {
     val internet = viewModel.internet
     val locationperm = viewModel.locationPermission
+    val loading = viewModel.isLoading
     val forcast = viewModel.forecast.observeAsState()
-//    Log.d("CatchErrorHome_permissions", "location ${viewModel.locationPermission}, internet ${viewModel.internet}")
-    LaunchedEffect(Unit) {
-        Log.d("CatchErrorHome_permissions", "internet: $internet")
-        Log.d("CatchErrorHome_permissions", "location: $locationperm")
+    Log.d("CatchErrorHome", "forecast: ${forcast.value}")
+    Log.d("CatchErrorHome_permissions", "internet: $internet")
+    Log.d("CatchErrorHome_permissions", "location: $locationperm")
+
+    LaunchedEffect(internet) {
+        if (!internet) {
+            viewModel.loadCacheData()
         }
+    }
+
     if (!internet) {
         Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
         Log.d("CatchError_in_home", "no internet")
-        viewModel.loadCacheData()
-        if (forcast.value == null) {
+        if (loading) {
+            Log.d("CatchError_in_home", "loading_NoInternet")
+            ShowLoading()
+        } else if (forcast.value == null) {
             ShowNoData(
                 R.drawable.no_internet,
                 "No Internet Connection",
@@ -108,7 +117,10 @@ fun Home(
         }
     } else {
         Log.d("CatchError_in_home", "yes internet")
-        if (!locationperm) {
+        if (loading) {
+            Log.d("CatchError_in_home", "loading_YesInternet")
+            ShowLoading()
+        } else if (!locationperm) {
             if (forcast.value == null) {
                 Log.d("CatchError_in_home", "no location search city")
                 ShowNoData(
@@ -152,7 +164,7 @@ fun Home(
 }
 
 @Composable
-fun ShowNoData(image: Int, text: String ,searchable:Boolean , viewModel: WeatherViewModel) {
+fun ShowNoData(image: Int, text: String, searchable: Boolean, viewModel: WeatherViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -168,7 +180,7 @@ fun ShowNoData(image: Int, text: String ,searchable:Boolean , viewModel: Weather
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
-        if(searchable){
+        if (searchable) {
             CustomSearch(viewModel)
         }
         Image(
@@ -218,7 +230,7 @@ fun CustomSearch(viewModel: WeatherViewModel) {
                     painter = painterResource(R.drawable.search),
                     contentDescription = null,
                     tint = Color.Gray, modifier = Modifier.clickable {
-                        viewModel.loadForcast(searchText , 6)
+                        viewModel.loadForcast(searchText, 6)
                     }
                 )
             }
@@ -414,10 +426,14 @@ fun LocationSearchBar(forcast: ApiResponse?, viewModel: WeatherViewModel) {
                         painter = painterResource(R.drawable.search),
                         contentDescription = null,
                         tint = Color.Gray, modifier = Modifier.clickable {
-                            if(!viewModel.internet){
-                                Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show()
+                            if (!viewModel.internet) {
+                                Toast.makeText(
+                                    context,
+                                    "No Internet Connection",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@clickable
-                            }else{
+                            } else {
                                 viewModel.loadForcast(searchText, 7)
                             }
                         }

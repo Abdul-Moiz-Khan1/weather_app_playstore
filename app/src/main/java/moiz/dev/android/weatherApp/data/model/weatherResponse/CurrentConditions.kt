@@ -13,7 +13,7 @@ data class CurrentConditions(
     val precip: Int,
     val precipprob: Int,
     val preciptype: Any,
-    val pressure: Int,
+    val pressure: Any,
     val snow: Int,
     val snowdepth: Int,
     val solarenergy: Double,

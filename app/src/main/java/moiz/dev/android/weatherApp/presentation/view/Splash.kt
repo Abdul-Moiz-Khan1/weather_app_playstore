@@ -1,6 +1,8 @@
 package moiz.dev.android.weatherApp.presentation.view
 
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Handler
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
@@ -49,6 +52,7 @@ import moiz.dev.android.weatherApp.utils.Utils.getCurrentLocation
 import moiz.dev.android.weatherApp.data.viewModel.WeatherViewModel
 import moiz.dev.android.weatherApp.ui.theme.left_grad
 import moiz.dev.android.weatherApp.utils.Routes
+import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
 import moiz.dev.android.weatherApp.utils.Utils.hasSeenOnboarding
 import moiz.dev.android.weatherApp.utils.Utils.isLocationEnabled
 import moiz.dev.android.weatherApp.utils.Utils.setSeenOnboarding
@@ -68,44 +72,74 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                     getCurrentLocation(context, onLocation = { lat, lon ->
                         Log.d("Location", "Latitude: $lat, Longitude: $lon")
                         viewModel.loadForecastByLocation(lat, lon)
+                        navigateAfterDelay(navController , showOnboarding , context)
 
                     }, onError = {
                         Log.d("Location", "Error: $it")
                         viewModel.locationPermission = false
                     })
+
                 } else {
                     viewModel.locationPermission = false
                     Toast.makeText(context, "Please enable location services", Toast.LENGTH_LONG)
                         .show()
+                    navigateAfterDelay(navController , showOnboarding , context)
                 }
+//                Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
+//                if (showOnboarding) {
+//                    setSeenOnboarding(context)
+//                    navController.navigate(Routes.ONBOARDING) {
+//                        popUpTo(Routes.SPLASH) { inclusive = true }
+//                    }
+//                } else {
+//                    navController.navigate(Routes.HOME) {
+//                        popUpTo(Routes.SPLASH) { inclusive = true }
+//                    }
+//                }
+
             } else {
                 viewModel.locationPermission = false
+//                Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
+//                if (showOnboarding) {
+//                    setSeenOnboarding(context)
+//                    navController.navigate(Routes.ONBOARDING) {
+//                        popUpTo(Routes.SPLASH) { inclusive = true }
+//                    }
+//                } else {
+//                    navController.navigate(Routes.HOME) {
+//                        popUpTo(Routes.SPLASH) { inclusive = true }
+//                    }
+//                }
                 Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
 
     LaunchedEffect(Unit) {
-        launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
-    LaunchedEffect(forecast) {
-        if (forecast != null) {
-            if (showOnboarding) {
-                setSeenOnboarding(context)
-                navController.navigate(Routes.ONBOARDING) {
-                    popUpTo(Routes.SPLASH) {
-                        inclusive = true
-                    }
-                }
-            } else {
-                navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.SPLASH) {
-                        inclusive = true
-                    }
-                }
-            }
-
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            viewModel.locationPermission = true
+            fetchAndLoadWeather(context, viewModel, navController , showOnboarding)
+        } else {
+            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
+//    LaunchedEffect(forecast) {
+//        Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
+//        if (showOnboarding) {
+//            setSeenOnboarding(context)
+//            navController.navigate(Routes.ONBOARDING) {
+//                popUpTo(Routes.SPLASH) { inclusive = true }
+//            }
+//        } else {
+//            navController.navigate(Routes.HOME) {
+//                popUpTo(Routes.SPLASH) { inclusive = true }
+//            }
+//        }
+//
+//    }
 
 
     Column(
@@ -125,14 +159,6 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        LaunchedEffect(Unit) {
-            delay(5000)
-            navController.navigate(Routes.HOME) {
-                popUpTo(Routes.SPLASH) {
-                    inclusive = true
-                }
-            }
-        }
         Image(painter = painterResource(R.drawable.splash_img), contentDescription = "")
         Text(
             "Weather",
@@ -150,4 +176,40 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
     }
 }
+
+fun fetchAndLoadWeather(context: Context, viewModel: WeatherViewModel , navController: NavController , showOnboarding: Boolean) {
+    if (isLocationEnabled(context)) {
+        getCurrentLocation(
+            context,
+            onLocation = { lat, lon ->
+                viewModel.loadForecastByLocation(lat, lon)
+                navigateAfterDelay(navController , showOnboarding , context)
+            },
+            onError = {
+                Log.e("Location", "Error getting location: $it")
+                viewModel.locationPermission = false
+                navigateAfterDelay(navController , showOnboarding , context)
+            }
+        )
+    } else {
+        Toast.makeText(context, "Enable location services", Toast.LENGTH_LONG).show()
+        viewModel.loadCacheData()
+        viewModel.locationPermission = false
+        navigateAfterDelay(navController , showOnboarding , context)
+    }
+}
+
+fun navigateAfterDelay(navController: NavController, showOnboarding: Boolean, context: Context) {
+    if (showOnboarding) {
+        setSeenOnboarding(context)
+        navController.navigate(Routes.ONBOARDING) {
+            popUpTo(Routes.SPLASH) { inclusive = true }
+        }
+    } else {
+        navController.navigate(Routes.HOME) {
+            popUpTo(Routes.SPLASH) { inclusive = true }
+        }
+    }
+}
+
 

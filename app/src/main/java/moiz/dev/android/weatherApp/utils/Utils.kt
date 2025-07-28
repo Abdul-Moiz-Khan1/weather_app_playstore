@@ -36,6 +36,7 @@ object Utils {
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
+                    onError(true)
                     onLocation(location.latitude.toString(), location.longitude.toString())
                 } else {
                     onError(false)

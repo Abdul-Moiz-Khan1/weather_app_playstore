@@ -20,14 +20,16 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
     ViewModel() {
     private val _forcast = MutableLiveData<ApiResponse?>()
     val forecast: LiveData<ApiResponse?> = _forcast
+    var isLoading by mutableStateOf(false)
 
 //    var locationPermission: Boolean = true
 //    var internet: Boolean = true
     var internet by mutableStateOf(true)
-    var locationPermission by mutableStateOf(true)
+    var locationPermission by mutableStateOf(false)
 
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {
+            isLoading = true
             try {
                 val data = repository.getForecast(city, connecton = {
                     internet = it
@@ -38,12 +40,15 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
 
             } catch (e: Exception) {
                 Log.e("eror", "Error: ${e.message}")
+            }finally {
+                isLoading = false
             }
         }
     }
 
     fun loadForecastByLocation(lat: String, lng: String) {
         viewModelScope.launch {
+            isLoading = true
             try {
                 val data = repository.getForecast("$lat,$lng", connecton = {
                     internet = it
@@ -54,18 +59,23 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
 
             } catch (e: Exception) {
                 Log.e("eror", "Error: ${e.message}")
+            }finally {
+                isLoading = false
             }
         }
     }
 
     fun loadCacheData() {
         viewModelScope.launch {
+            isLoading = true
             try {
                 val data = repository.getCachedData()
                 _forcast.value = data
                 Log.d("CatchError_loadcache,inViewModel", data.toString())
             } catch (e: Exception) {
                 Log.d("CatchError,inViewModel_loadcache", e.message.toString())
+            }finally {
+                isLoading = false
             }
         }
     }

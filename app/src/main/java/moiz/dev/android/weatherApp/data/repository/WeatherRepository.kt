@@ -15,6 +15,7 @@ class WeatherRepository @Inject constructor(
             val response = api.getForecast(city, "metric", "NTG86NK4QTHXDTMVDA85KCQ6A", "json")
             Log.d("CatchError_repo,intry", response.toString())
             dao.insertWeather(response)
+            connecton(true)
             return response
         } catch (e: Exception) {
             connecton(false)
