@@ -137,28 +137,6 @@ fun Home(
         }
     }
 
-//    if (!viewModel.internet) {
-//        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
-//        Log.d("CatchError_in_home", "no internet")
-//        viewModel.loadCacheData()
-//        if (forcast.value == null) {
-//            ShowNoData(R.drawable.no_internet, "No Internet Connection" , false , viewModel)
-//        } else {
-//            ShowUi(navController, forcast.value, viewModel)
-//        }
-//    } else {
-//        Log.d("CatchError_in_home", "yes internet")
-//        if (!viewModel.locationPermission) {
-//            if (forcast.value == null) {
-//                Log.d("CatchError_in_home", "no location search city" )
-//                ShowNoData(R.drawable.no_location, "Location Not found\n\nTry searching", true , viewModel)
-//            }
-//        }else {
-//            Log.d("CatchError_in_home", "yes internet show ui")
-//            ShowUi(navController, forcast.value, viewModel)
-//        }
-//    }
-
 
 }
 
