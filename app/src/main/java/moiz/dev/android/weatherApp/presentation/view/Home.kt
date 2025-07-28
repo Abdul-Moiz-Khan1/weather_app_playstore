@@ -84,17 +84,18 @@ import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 fun Home(
     navController: NavController, viewModel: WeatherViewModel
 ) {
-
+    val internet = viewModel.internet
+    val locationperm = viewModel.locationPermission
     val forcast = viewModel.forecast.observeAsState()
-    Log.d("CatchError_in_home", forcast.value.toString())
-    Log.d("CatchError_size", forcast.value?.days?.size.toString())
-    Log.d("CatchErrorHome_permissions", "location ${viewModel.locationPermission}, internet ${viewModel.internet}")
-    if (!viewModel.internet) {
+//    Log.d("CatchErrorHome_permissions", "location ${viewModel.locationPermission}, internet ${viewModel.internet}")
+    LaunchedEffect(Unit) {
+        Log.d("CatchErrorHome_permissions", "internet: $internet")
+        Log.d("CatchErrorHome_permissions", "location: $locationperm")
+        }
+    if (!internet) {
         Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
         Log.d("CatchError_in_home", "no internet")
-
         viewModel.loadCacheData()
-
         if (forcast.value == null) {
             ShowNoData(
                 R.drawable.no_internet,
@@ -105,11 +106,9 @@ fun Home(
         } else {
             ShowUi(navController, forcast.value, viewModel)
         }
-
     } else {
         Log.d("CatchError_in_home", "yes internet")
-        viewModel.loadCacheData()
-        if (!viewModel.locationPermission) {
+        if (!locationperm) {
             if (forcast.value == null) {
                 Log.d("CatchError_in_home", "no location search city")
                 ShowNoData(

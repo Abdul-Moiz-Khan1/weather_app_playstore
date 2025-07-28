@@ -2,6 +2,9 @@ package moiz.dev.android.weatherApp.data.viewModel
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,8 +21,10 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
     private val _forcast = MutableLiveData<ApiResponse?>()
     val forecast: LiveData<ApiResponse?> = _forcast
 
-    var locationPermission: Boolean = true
-    var internet: Boolean = true
+//    var locationPermission: Boolean = true
+//    var internet: Boolean = true
+    var internet by mutableStateOf(true)
+    var locationPermission by mutableStateOf(true)
 
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {
