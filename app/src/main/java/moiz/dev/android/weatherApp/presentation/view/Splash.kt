@@ -64,7 +64,6 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
     val context = LocalContext.current
     var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding(context)) }
-    val forecast by viewModel.forecast.observeAsState()
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
@@ -76,6 +75,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
                     }, onError = {
                         Log.d("Location", "Error: $it")
+                        navigateAfterDelay(navController , showOnboarding , context)
                         viewModel.locationPermission = false
                     })
 
@@ -85,31 +85,11 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                         .show()
                     navigateAfterDelay(navController , showOnboarding , context)
                 }
-//                Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
-//                if (showOnboarding) {
-//                    setSeenOnboarding(context)
-//                    navController.navigate(Routes.ONBOARDING) {
-//                        popUpTo(Routes.SPLASH) { inclusive = true }
-//                    }
-//                } else {
-//                    navController.navigate(Routes.HOME) {
-//                        popUpTo(Routes.SPLASH) { inclusive = true }
-//                    }
-//                }
+
 
             } else {
                 viewModel.locationPermission = false
-//                Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
-//                if (showOnboarding) {
-//                    setSeenOnboarding(context)
-//                    navController.navigate(Routes.ONBOARDING) {
-//                        popUpTo(Routes.SPLASH) { inclusive = true }
-//                    }
-//                } else {
-//                    navController.navigate(Routes.HOME) {
-//                        popUpTo(Routes.SPLASH) { inclusive = true }
-//                    }
-//                }
+                navigateAfterDelay(navController , showOnboarding , context)
                 Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
@@ -126,20 +106,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
             launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
-//    LaunchedEffect(forecast) {
-//        Log.d("CatchError_in_splash", "ONBOARD: $showOnboarding")
-//        if (showOnboarding) {
-//            setSeenOnboarding(context)
-//            navController.navigate(Routes.ONBOARDING) {
-//                popUpTo(Routes.SPLASH) { inclusive = true }
-//            }
-//        } else {
-//            navController.navigate(Routes.HOME) {
-//                popUpTo(Routes.SPLASH) { inclusive = true }
-//            }
-//        }
-//
-//    }
+
 
 
     Column(
