@@ -13,34 +13,45 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 import moiz.dev.android.weatherApp.data.repository.WeatherRepository
+import moiz.dev.android.weatherApp.utils.NetworkStatusTracker
 import javax.inject.Inject
 
-@HiltViewModel
-class WeatherViewModel @Inject constructor(private val repository: WeatherRepository) :
-    ViewModel() {
+    @HiltViewModel
+    class WeatherViewModel @Inject constructor(
+        private val repository: WeatherRepository,
+        private val networkStatusTracker: NetworkStatusTracker
+    ) :
+        ViewModel() {
+
+        private val _internet = mutableStateOf(true)
+        val internet: Boolean get() = _internet.value
+
+        init {
+            viewModelScope.launch {
+                networkStatusTracker.networkStatus.collect { isConnected ->
+                    _internet.value = isConnected
+                }
+            }
+        }
+
     private val _forcast = MutableLiveData<ApiResponse?>()
     val forecast: LiveData<ApiResponse?> = _forcast
     var isLoading by mutableStateOf(false)
 
-//    var locationPermission: Boolean = true
-//    var internet: Boolean = true
-    var internet by mutableStateOf(true)
     var locationPermission by mutableStateOf(false)
 
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {
             isLoading = true
             try {
-                val data = repository.getForecast(city, connecton = {
-                    internet = it
-                })
+                val data = repository.getForecast(city)
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
 
             } catch (e: Exception) {
                 Log.e("eror", "Error: ${e.message}")
-            }finally {
+            } finally {
                 isLoading = false
             }
         }
@@ -50,16 +61,14 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
         viewModelScope.launch {
             isLoading = true
             try {
-                val data = repository.getForecast("$lat,$lng", connecton = {
-                    internet = it
-                })
+                val data = repository.getForecast("$lat,$lng")
                 _forcast.value = data
                 Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
                 Log.d("CatchError,inViewModel", data.toString())
 
             } catch (e: Exception) {
                 Log.e("eror", "Error: ${e.message}")
-            }finally {
+            } finally {
                 isLoading = false
             }
         }
@@ -74,7 +83,7 @@ class WeatherViewModel @Inject constructor(private val repository: WeatherReposi
                 Log.d("CatchError_loadcache,inViewModel", data.toString())
             } catch (e: Exception) {
                 Log.d("CatchError,inViewModel_loadcache", e.message.toString())
-            }finally {
+            } finally {
                 isLoading = false
             }
         }

@@ -29,6 +29,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import androidx.core.content.edit
 import java.io.IOException
+import java.time.LocalTime
 
 object Utils {
     fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit , onError:(Boolean)->Unit) {
@@ -89,12 +90,43 @@ object Utils {
 
         return hours.take(24).map { hour ->
             DailyForecastItem(
-                time = hour.datetime ?: "--:--",
+                time = hour.datetime?.substring(0, 5) ?: "--:--", // keep "HH:mm"
                 img = hour.icon ?: "unknown",
                 temp = hour.temp?.toString() ?: "--"
             )
         }
     }
+
+//fun getDailyForecastItems(day: Day?): List<DailyForecastItem> {
+//    val hours = day?.hours ?: return emptyList()
+//
+//    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+//    val now = LocalTime.now()
+//
+//    // Find index of the hour closest to current time
+//    val startIndex = hours.indexOfFirst { hour ->
+//        hour.datetime?.let {
+//            try {
+//                val time = LocalTime.parse(it, formatter)
+//                !time.isBefore(now)
+//            } catch (e: Exception) {
+//                false
+//            }
+//        } ?: false
+//    }.let { if (it == -1) 0 else it }
+//
+//    // Rotate the list from current hour
+//    val rotated = hours.drop(startIndex) + hours.take(startIndex)
+//
+//    return rotated.take(24).map { hour ->
+//        DailyForecastItem(
+//            time = hour.datetime?.substring(0, 5) ?: "--:--", // e.g., "14:00"
+//            img = hour.icon ?: "unknown",
+//            temp = hour.temp?.toString() ?: "--"
+//        )
+//    }
+//}
+
 
     @Composable
     fun ShowLoading() {

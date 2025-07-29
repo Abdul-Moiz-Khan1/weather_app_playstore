@@ -10,15 +10,15 @@ class WeatherRepository @Inject constructor(
     private val api: ApiInterface,
     private val dao: WeatherDao
 ) {
-    suspend fun getForecast(city: String , connecton:(Boolean) -> Unit): ApiResponse? {
+    suspend fun getForecast(city: String): ApiResponse? {
         try {
             val response = api.getForecast(city, "metric", "NTG86NK4QTHXDTMVDA85KCQ6A", "json")
             Log.d("CatchError_repo,intry", response.toString())
             dao.insertWeather(response)
-            connecton(true)
+
             return response
         } catch (e: Exception) {
-            connecton(false)
+
             Log.d("CatchError_repo,inCatch", e.message.toString())
             return getCachedData()
 

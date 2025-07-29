@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,6 +81,7 @@ import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
 import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.getLocationName
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
+import java.time.LocalTime
 
 @Composable
 fun Home(
@@ -98,13 +100,13 @@ fun Home(
             viewModel.loadCacheData()
         }
     }
-    if (!internet) {
+    if (loading) {
+        Log.d("CatchError_in_home", "loading_NoInternet")
+        ShowLoading()
+    } else if (!internet) {
         Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
         Log.d("CatchError_in_home", "no internet")
-        if (loading) {
-            Log.d("CatchError_in_home", "loading_NoInternet")
-            ShowLoading()
-        } else if (forcast.value == null) {
+        if (forcast.value == null) {
             ShowNoData(
                 R.drawable.no_internet,
                 "No Internet Connection",
@@ -116,10 +118,7 @@ fun Home(
         }
     } else {
         Log.d("CatchError_in_home", "yes internet")
-        if (loading) {
-            Log.d("CatchError_in_home", "loading_YesInternet")
-            ShowLoading()
-        } else if (!locationperm) {
+        if (!locationperm) {
             if (forcast.value == null) {
                 Log.d("CatchError_in_home", "no location search city")
                 ShowNoData(
@@ -230,7 +229,7 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?, viewModel: Weath
                     )
                 )
             )
-            .padding(16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val dailyForecastList = getDailyForecastItems(forcast?.days?.get(0))
@@ -402,16 +401,7 @@ fun LocationSearchBar(forcast: ApiResponse?, viewModel: WeatherViewModel) {
                         painter = painterResource(R.drawable.search),
                         contentDescription = null,
                         tint = Color.Gray, modifier = Modifier.clickable {
-                            if (!viewModel.internet) {
-                                Toast.makeText(
-                                    context,
-                                    "No Internet Connection",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@clickable
-                            } else {
-                                viewModel.loadForcast(searchText, 7)
-                            }
+                            viewModel.loadForcast(searchText, 7)
                         }
                     )
                 }
@@ -503,8 +493,19 @@ fun WeeklyForecastCard(forcast: ApiResponse?) {
 }
 
 @Composable
-fun ScrollableRow(list: List<DailyForecastItem>) {
-    LazyRow(
+fun ScrollableRow(list1: List<DailyForecastItem>) {
+    val list = list1
+
+    val listState = rememberLazyListState()
+
+// Scroll to current hour index
+    LaunchedEffect(Unit) {
+        val currentHour = LocalTime.now().hour
+        if (currentHour in list.indices) {
+            listState.scrollToItem(currentHour)
+        }
+    }
+    LazyRow(state = listState,
         modifier = Modifier
             .fillMaxWidth()
     ) {
@@ -577,7 +578,7 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
             Text(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                text = item.time.dropLast(3),
+                text = item.time,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White
             )

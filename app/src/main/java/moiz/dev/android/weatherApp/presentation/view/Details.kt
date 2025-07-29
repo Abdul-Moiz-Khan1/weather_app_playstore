@@ -78,9 +78,7 @@ import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 
 @Composable
 fun Details(navController: NavController , viewModel: WeatherViewModel) {
-//    viewModel.loadCacheData()
 
-//    viewModel.loadCacheData()
     val forecast = viewModel.forecast.observeAsState()
     Log.d("forecast" , forecast.value.toString())
 
