@@ -64,51 +64,18 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
 
     val context = LocalContext.current
     var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding(context)) }
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                if (isLocationEnabled(context)) {
-                    getCurrentLocation(context, onLocation = { lat, lon ->
-                        Log.d("Location", "Latitude: $lat, Longitude: $lon")
-                        viewModel.loadForecastByLocation(lat, lon)
-                        navigateAfterDelay(navController , showOnboarding , context)
-
-                    }, onError = {
-                        Log.d("Location", "Error: $it")
-                        navigateAfterDelay(navController , showOnboarding , context)
-                        viewModel.locationPermission = false
-                    })
-
-                } else {
-                    viewModel.locationPermission = false
-                    Toast.makeText(context, "Please enable location services", Toast.LENGTH_LONG)
-                        .show()
-                    navigateAfterDelay(navController , showOnboarding , context)
-                }
-
-
-            } else {
-                viewModel.locationPermission = false
-                navigateAfterDelay(navController , showOnboarding , context)
-                Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+    LaunchedEffect(Unit) {
+        delay(1500)
+        if (showOnboarding) {
+            navController.navigate(Routes.ONBOARDING) {
+                popUpTo(Routes.SPLASH) { inclusive = true }
+            }
+        } else {
+            navController.navigate(Routes.HOME) {
+                popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }
-
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            viewModel.locationPermission = true
-            fetchAndLoadWeather(context, viewModel, navController , showOnboarding)
-        } else {
-            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
     }
-
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -144,39 +111,5 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
     }
 }
 
-fun fetchAndLoadWeather(context: Context, viewModel: WeatherViewModel , navController: NavController , showOnboarding: Boolean) {
-    if (isLocationEnabled(context)) {
-        getCurrentLocation(
-            context,
-            onLocation = { lat, lon ->
-                viewModel.loadForecastByLocation(lat, lon)
-                navigateAfterDelay(navController , showOnboarding , context)
-            },
-            onError = {
-                Log.e("Location", "Error getting location: $it")
-                viewModel.locationPermission = false
-                navigateAfterDelay(navController , showOnboarding , context)
-            }
-        )
-    } else {
-        Toast.makeText(context, "Enable location services", Toast.LENGTH_LONG).show()
-        viewModel.loadCacheData()
-        viewModel.locationPermission = false
-        navigateAfterDelay(navController , showOnboarding , context)
-    }
-}
-
-fun navigateAfterDelay(navController: NavController, showOnboarding: Boolean, context: Context) {
-    if (showOnboarding) {
-        setSeenOnboarding(context)
-        navController.navigate(Routes.ONBOARDING) {
-            popUpTo(Routes.SPLASH) { inclusive = true }
-        }
-    } else {
-        navController.navigate(Routes.HOME) {
-            popUpTo(Routes.SPLASH) { inclusive = true }
-        }
-    }
-}
 
 

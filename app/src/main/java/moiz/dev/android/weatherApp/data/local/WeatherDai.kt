@@ -4,9 +4,11 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.TypeConverters
 import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
 
 @Dao
+@TypeConverters(WeatherTypeConverters::class)
 interface WeatherDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

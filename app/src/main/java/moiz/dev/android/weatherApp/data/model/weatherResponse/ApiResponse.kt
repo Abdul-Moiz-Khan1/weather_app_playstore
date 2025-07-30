@@ -1,9 +1,14 @@
 package moiz.dev.android.weatherApp.data.model.weatherResponse
 
+import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import moiz.dev.android.weatherApp.data.local.WeatherTypeConverters
 
+@Keep
 @Entity
+@TypeConverters(WeatherTypeConverters::class)
 data class ApiResponse(
     @PrimaryKey val id: Int = 0,
     val address: String,

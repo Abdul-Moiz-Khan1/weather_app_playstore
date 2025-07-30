@@ -41,7 +41,7 @@ class WeatherTypeConverters {
     fun toStations(value: String): Stations {
         return gson.fromJson(value, Stations::class.java)
     }
-
+//
     @TypeConverter
     fun fromAnyList(value: List<Any>): String {
         return gson.toJson(value)
@@ -50,6 +50,17 @@ class WeatherTypeConverters {
     @TypeConverter
     fun toAnyList(value: String): List<Any> {
         val type = object : TypeToken<List<Any>>() {}.type
+        return gson.fromJson(value, type)
+    }
+
+
+
+    @TypeConverter
+    fun fromStringList(value: List<String>): String = gson.toJson(value)
+
+    @TypeConverter
+    fun toStringList(value: String): List<String> {
+        val type = object : TypeToken<List<String>>() {}.type
         return gson.fromJson(value, type)
     }
 }

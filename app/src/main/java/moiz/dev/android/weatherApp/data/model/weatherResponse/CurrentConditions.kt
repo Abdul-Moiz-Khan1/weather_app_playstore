@@ -1,7 +1,10 @@
 package moiz.dev.android.weatherApp.data.model.weatherResponse
 
+import androidx.annotation.Keep
+
+@Keep
 data class CurrentConditions(
-    val cloudcover: Any,
+    val cloudcover: Double,
     val conditions: String,
     val datetime: String,
     val datetimeEpoch: Int,
@@ -13,10 +16,11 @@ data class CurrentConditions(
     val precip: Int,
     val precipprob: Int,
     val preciptype: Any,
-    val pressure: Any,
+    val pressure: Int,
     val snow: Int,
     val snowdepth: Int,
     val solarenergy: Double,
+//    val solarenergy: Int,
     val solarradiation: Int,
     val source: String,
     val stations: List<String>,
@@ -29,5 +33,7 @@ data class CurrentConditions(
     val visibility: Any,
     val winddir: Int,
     val windgust: Double,
-    val windspeed: Double
+    val windspeed: Double,
+//    val windspeed: Int
 )
+

@@ -1,8 +1,13 @@
 package moiz.dev.android.weatherApp.presentation.view
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
@@ -59,6 +66,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -78,8 +86,11 @@ import moiz.dev.android.weatherApp.ui.theme.text_right_grad
 import moiz.dev.android.weatherApp.utils.Routes
 import moiz.dev.android.weatherApp.utils.Utils
 import moiz.dev.android.weatherApp.utils.Utils.ShowLoading
+import moiz.dev.android.weatherApp.utils.Utils.getCurrentLocation
 import moiz.dev.android.weatherApp.utils.Utils.getDailyForecastItems
 import moiz.dev.android.weatherApp.utils.Utils.getLocationName
+import moiz.dev.android.weatherApp.utils.Utils.isLocationEnabled
+import moiz.dev.android.weatherApp.utils.Utils.setSeenOnboarding
 import moiz.dev.android.weatherApp.utils.Utils.tempToInt
 import java.time.LocalTime
 
@@ -87,18 +98,57 @@ import java.time.LocalTime
 fun Home(
     navController: NavController, viewModel: WeatherViewModel
 ) {
+    val context = LocalContext.current
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                if (isLocationEnabled(context)) {
+                    getCurrentLocation(context, onLocation = { lat, lon ->
+                        Log.d("Location", "Latitude: $lat, Longitude: $lon")
+                        viewModel.loadForecastByLocation(lat, lon)
+
+                    }, onError = {
+                        Log.d("Location", "Error: $it")
+                        viewModel.locationPermission = false
+                    })
+                } else {
+                    viewModel.locationPermission = false
+                    Toast.makeText(context, "Please enable location services", Toast.LENGTH_LONG)
+                        .show()
+                }
+            } else {
+                viewModel.locationPermission = false
+                Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            viewModel.locationPermission = true
+            fetchAndLoadWeather(context, viewModel)
+        } else {
+            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    setSeenOnboarding(context)
     val internet = viewModel.internet
     val locationperm = viewModel.locationPermission
     val loading = viewModel.isLoading
     val forcast = viewModel.forecast.observeAsState()
+
     Log.d("CatchErrorHome", "forecast: ${forcast.value}")
     Log.d("CatchErrorHome_permissions", "internet: $internet")
     Log.d("CatchErrorHome_permissions", "location: $locationperm")
 
     LaunchedEffect(internet) {
-        if (!internet) {
-            viewModel.loadCacheData()
-        }
+
+        viewModel.loadCacheData()
+
     }
     if (loading) {
         Log.d("CatchError_in_home", "loading_NoInternet")
@@ -132,7 +182,8 @@ fun Home(
             }
         } else {
             Log.d("CatchError_in_home", "yes internet show ui")
-            ShowUi(navController, forcast.value, viewModel)
+            if (forcast.value == null) ShowLoading()
+            else ShowUi(navController, forcast.value, viewModel)
         }
     }
 
@@ -219,6 +270,7 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?, viewModel: Weath
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .background(
                 brush = Brush.verticalGradient(
@@ -229,7 +281,7 @@ fun ShowUi(navController: NavController, forcast: ApiResponse?, viewModel: Weath
                     )
                 )
             )
-            .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 32.dp),
+            .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val dailyForecastList = getDailyForecastItems(forcast?.days?.get(0))
@@ -505,7 +557,8 @@ fun ScrollableRow(list1: List<DailyForecastItem>) {
             listState.scrollToItem(currentHour)
         }
     }
-    LazyRow(state = listState,
+    LazyRow(
+        state = listState,
         modifier = Modifier
             .fillMaxWidth()
     ) {
@@ -837,6 +890,26 @@ fun Custom_divider() {
         thickness = 1.dp,
         modifier = Modifier.padding(horizontal = 16.dp)
     )
+}
+
+fun fetchAndLoadWeather(context: Context, viewModel: WeatherViewModel) {
+    if (isLocationEnabled(context)) {
+        getCurrentLocation(
+            context,
+            onLocation = { lat, lon ->
+                Log.d("Location", "Latitude: $lat, Longitude: $lon")
+                viewModel.loadForecastByLocation(lat, lon)
+            },
+            onError = {
+                Log.e("Location", "Error getting location: $it")
+                viewModel.locationPermission = false
+            }
+        )
+    } else {
+        Toast.makeText(context, "Enable location services", Toast.LENGTH_LONG).show()
+        viewModel.loadCacheData()
+        viewModel.locationPermission = false
+    }
 }
 
 //

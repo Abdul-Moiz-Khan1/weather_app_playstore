@@ -1,5 +1,8 @@
 package moiz.dev.android.weatherApp.data.model.weatherResponse
 
+import androidx.annotation.Keep
+
+@Keep
 data class Hour(
     val cloudcover: Double,
     val conditions: String,
