@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import moiz.dev.android.weatherApp.R
 import moiz.dev.android.weatherApp.data.model.DailyForecastItem
 import moiz.dev.android.weatherApp.data.model.weatherResponse.ApiResponse
@@ -122,9 +123,16 @@ fun ShowData(navController: NavController, forecast: ApiResponse) {
 
 @Composable
 fun ShowBasics(navController: NavController, forecast: ApiResponse) {
+    var isBackPressed by remember { mutableStateOf(false) }
     val address = forecast?.address
     var locationName by remember { mutableStateOf<String?>(address) }
     val context = LocalContext.current
+    if (isBackPressed) {
+        LaunchedEffect(Unit) {
+            delay(500)
+            isBackPressed = false
+        }
+    }
     LaunchedEffect(address) {
         if (!forecast?.address.isNullOrEmpty() && address.contains(",")) {
             val parts = address.split(",")
@@ -155,7 +163,12 @@ fun ShowBasics(navController: NavController, forecast: ApiResponse) {
                 contentDescription = null,
                 modifier = Modifier
                     .size(25.dp)
-                    .clickable { navController.popBackStack() }
+                    .clickable {
+                            if (!isBackPressed) {
+                                isBackPressed = true
+                                navController.popBackStack()
+                            }
+                    }
                     .rotate(180f)
             )
         }
