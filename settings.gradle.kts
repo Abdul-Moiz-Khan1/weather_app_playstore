@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "weatherApp_playStore"
+rootProject.name = "Weather Update & Forecast"
 include(":app")

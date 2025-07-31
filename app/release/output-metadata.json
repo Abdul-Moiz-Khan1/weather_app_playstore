@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "moiz.dev.android.weatherApp",
+  "applicationId": "com.ttl.weatherupdate.forecast",
   "variantName": "release",
   "elements": [
     {

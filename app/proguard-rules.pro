@@ -167,13 +167,13 @@
 
 # For Kotlin metadata (to preserve class structure)
 
--keep class moiz.dev.android.weatherApp.data.model.** {*;}
--keep class moiz.dev.android.weatherApp.data.model.**
--keep class moiz.dev.android.weatherApp.data.repository.** {*;}
--keep class moiz.dev.android.weatherApp.data.repository.**
--keep class moiz.dev.android.weatherApp.data.remote.** {*;}
--keep class moiz.dev.android.weatherApp.data.remote.**
--keep class moiz.dev.android.weatherApp.data.viewModel.** {*;}
--keep class moiz.dev.android.weatherApp.data.viewModel.**
+-keep class com.ttl.weatherupdate.forecast.data.model.** {*;}
+-keep class com.ttl.weatherupdate.forecast.data.model.**
+-keep class com.ttl.weatherupdate.forecast.data.repository.** {*;}
+-keep class com.ttl.weatherupdate.forecast.data.repository.**
+-keep class com.ttl.weatherupdate.forecast.data.remote.** {*;}
+-keep class com.ttl.weatherupdate.forecast.data.remote.**
+-keep class com.ttl.weatherupdate.forecast.data.viewModel.** {*;}
+-keep class com.ttl.weatherupdate.forecast.data.viewModel.**
 
 

@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "moiz.dev.android.weatherApp"
+    namespace = "com.ttl.weatherupdate.forecast"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "moiz.dev.android.weatherApp"
+        applicationId = "com.ttl.weatherupdate.forecast"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
