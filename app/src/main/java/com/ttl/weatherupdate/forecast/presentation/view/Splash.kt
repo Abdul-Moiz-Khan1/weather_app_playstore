@@ -47,7 +47,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
-import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.utils.Utils.getCurrentLocation
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import com.ttl.weatherupdate.forecast.ui.theme.left_grad
@@ -57,6 +56,10 @@ import com.ttl.weatherupdate.forecast.utils.Utils.hasSeenOnboarding
 import com.ttl.weatherupdate.forecast.utils.Utils.isLocationEnabled
 import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
 import okhttp3.Route
+
+import com.ttl.weatherupdate.forecast.R
+import com.ttl.weatherupdate.forecast.utils.Utils
+import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -74,6 +77,26 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
             navController.navigate(Routes.HOME) {
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
+        }
+    }
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            getCurrentLocation(context, onLocation = { lat, lon ->
+                Log.d("Location", "Latitude: $lat, Longitude: $lon")
+                viewModel.latitude = lat
+                viewModel.longitude = lon
+                val city = getLocationName(context, lat.toDouble(), lon.toDouble())
+                val country = Utils.getCountryFromCity(context, city.toString())
+                viewModel.getDatafromWeb(context,city.toString() , country.toString())
+                viewModel.getHourlyData()
+            }, onError = {
+                Log.d("Location", "Error: $it")
+                viewModel.locationPermission = false
+            })
         }
     }
     Column(

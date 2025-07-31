@@ -1,6 +1,5 @@
 package com.ttl.weatherupdate.forecast.presentation.view
 
-import android.graphics.SweepGradient
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -43,16 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toAndroidRectF
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -60,10 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
-import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.DailyForecastItem
 import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
@@ -77,6 +68,7 @@ import com.ttl.weatherupdate.forecast.utils.Utils.getDailyForecastItems
 import com.ttl.weatherupdate.forecast.utils.Utils.getDayOfWeek
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.tempToInt
+import com.ttl.weatherupdate.forecast.R
 
 @Composable
 fun Details(navController: NavController , viewModel: WeatherViewModel) {

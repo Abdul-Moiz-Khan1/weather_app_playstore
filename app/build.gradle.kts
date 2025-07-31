@@ -115,4 +115,8 @@ dependencies {
     //gcoil
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    //jsoup
+    implementation("org.jsoup:jsoup:1.21.1")
+
+
 }

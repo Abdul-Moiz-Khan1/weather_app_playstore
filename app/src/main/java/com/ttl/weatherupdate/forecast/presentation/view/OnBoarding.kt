@@ -45,12 +45,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.OnboardingPage
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import com.ttl.weatherupdate.forecast.ui.theme.Purple80
 import com.ttl.weatherupdate.forecast.ui.theme.app_grey
 import com.ttl.weatherupdate.forecast.utils.Routes
+
+import com.ttl.weatherupdate.forecast.R
 
 @Composable
 fun OnBoarding(navController: NavController) {

@@ -20,7 +20,6 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.android.gms.location.LocationServices
 import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.DailyForecastItem
-import com.ttl.weatherupdate.forecast.data.model.weatherResponse.Day
 import com.ttl.weatherupdate.forecast.ui.theme.grad_home_above
 import com.ttl.weatherupdate.forecast.ui.theme.grad_home_below
 import java.time.LocalDate
@@ -28,8 +27,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import androidx.core.content.edit
+import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import java.io.IOException
-import java.time.LocalTime
 
 object Utils {
     fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit , onError:(Boolean)->Unit) {
@@ -85,8 +84,7 @@ object Utils {
         return temp?.toInt()
     }
 
-    fun getDailyForecastItems(day: Day?): List<DailyForecastItem> {
-        val hours = day?.hours ?: return emptyList()
+    fun getDailyForecastItems(day: List<HourlyForecast>): List<DailyForecastItem> {
 
         return hours.take(24).map { hour ->
             DailyForecastItem(
@@ -136,6 +134,21 @@ object Utils {
             val geocoder = Geocoder(context, Locale.getDefault())
             val addresses = geocoder.getFromLocation(lat, lon, 1)
             addresses?.get(0)?.locality
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun getCountryFromCity(context: Context, cityName: String): String? {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        return try {
+            val addresses = geocoder.getFromLocationName(cityName, 1)
+            if (!addresses.isNullOrEmpty()) {
+                addresses[0].countryName
+            } else {
+                null
+            }
         } catch (e: IOException) {
             e.printStackTrace()
             null
