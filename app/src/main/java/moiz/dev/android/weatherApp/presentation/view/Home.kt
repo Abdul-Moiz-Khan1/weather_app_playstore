@@ -146,7 +146,6 @@ fun Home(
     Log.d("CatchErrorHome_permissions", "location: $locationperm")
 
     LaunchedEffect(internet) {
-
         viewModel.loadCacheData()
 
     }
