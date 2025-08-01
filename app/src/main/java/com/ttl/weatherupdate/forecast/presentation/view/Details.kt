@@ -65,7 +65,6 @@ import com.ttl.weatherupdate.forecast.ui.theme.main_card_grad_top
 import com.ttl.weatherupdate.forecast.utils.Utils
 import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
 import com.ttl.weatherupdate.forecast.utils.Utils.getDailyForecastItems
-import com.ttl.weatherupdate.forecast.utils.Utils.getDayOfWeek
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.tempToInt
 import com.ttl.weatherupdate.forecast.R
@@ -281,9 +280,9 @@ fun DetailedWeeklyForecastView(forcast: ApiResponse?, i: Int) {
             contentDescription = null
         )
         if (isRotated) {
-            ShowHourlyData(forcast , i)
+//            ShowHourlyData(forcast , i)
         }
-        Text(text = getDayOfWeek(forcast?.days[i]?.datetime.toString()), color = Color.White)
+//        Text(text = getDayOfWeek(forcast?.days[i]?.datetime.toString()), color = Color.White)
         Image(
             painter = painterResource(id = Utils.getImage(forcast?.days[i]?.conditions.toString())),
             contentDescription = "null",
@@ -398,21 +397,21 @@ fun UVIndexIndicator(
     }
 }
 
-@Composable
-fun ShowHourlyData(forecast: ApiResponse? , index:Int) {
-    val list = getDailyForecastItems(forecast?.days?.get(index))
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + slideInVertically(initialOffsetY = { -20 }),
-        exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
-    ) {
-        Column(modifier = Modifier.padding(4.dp)) {
-            Text(getDayOfWeek(forecast?.days?.get(index)?.datetime.toString()), fontSize = 20.sp, color = Color.White)
-            ScrollableData(list)
-        }
-
-    }
-}
+//@Composable
+//fun ShowHourlyData(forecast: ApiResponse? , index:Int) {
+//    val list = getDailyForecastItems(forecast?.days?.get(index))
+//    AnimatedVisibility(
+//        visible = true,
+//        enter = fadeIn() + slideInVertically(initialOffsetY = { -20 }),
+//        exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
+//    ) {
+//        Column(modifier = Modifier.padding(4.dp)) {
+//            Text(getDayOfWeek(forecast?.days?.get(index)?.datetime.toString()), fontSize = 20.sp, color = Color.White)
+//            ScrollableData(list)
+//        }
+//
+//    }
+//}
 
 @Composable
 fun ScrollableData(list: List<DailyForecastItem>) {

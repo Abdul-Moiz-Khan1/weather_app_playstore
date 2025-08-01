@@ -60,15 +60,27 @@ class WeatherViewModel @Inject constructor(
     var longitude by mutableStateOf("")
 
     fun getDatafromWeb(context: Context, city: String, country: String) {
-        location_city = city
-        location_country = country
+        if(country == "United States"){
+            location_country = "usa"
+        }else if (country.contains("united")== true && country.contains("kingdom")){
+            location_country = "uk"
+        }else if (country.contains(" ")){
+            location_country= country.replace(" ", "-")
+        }
+        if(city.contains(" ")){
+            location_city = city.replace(" ", "-")
+        }else{
+            location_city = city
+        }
+
+
 
         viewModelScope.launch {
             isLoading = true
             try {
                 repository.getWeeklyDatafromWeb(
-                    city,
-                    country,
+                    location_city,
+                    location_country,
                     onSucess = { elements ->
                         val allForecasts = mutableListOf<DailyForecast>()
 
@@ -112,8 +124,19 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-
-    fun getHourlyData() {
+    fun getHourlyData(context: Context, city: String, country: String) {
+        if(country == "United States"){
+            location_country = "usa"
+        }else if (country.contains("united")== true && country.contains("kingdom")){
+            location_country = "uk"
+        }else if (country.contains(" ")){
+            location_country= country.replace(" ", "-")
+        }
+        if(city.contains(" ")){
+            location_city = city.replace(" ", "-")
+        }else{
+            location_city = city
+        }
         viewModelScope.launch {
             isLoading = true
             try {
@@ -153,7 +176,6 @@ class WeatherViewModel @Inject constructor(
             }
         }
     }
-
 
     fun loadForcast(city: String, days: Int) {
         viewModelScope.launch {

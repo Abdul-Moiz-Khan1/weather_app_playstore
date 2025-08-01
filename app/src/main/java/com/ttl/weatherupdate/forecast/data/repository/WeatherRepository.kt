@@ -61,6 +61,7 @@ class WeatherRepository @Inject constructor(
             val doc_hourly =
                 Jsoup.connect("https://www.timeanddate.com/weather/${location_country}/${location_city}/hourly")
                     .get()
+            Log.d("hourlybody " , doc_hourly.body().text())
             val rows_hourly = doc_hourly.select("table.zebra.tb-wt.fw.va-m tbody tr")
             onSucess(rows_hourly)
         } catch (e: Exception) {

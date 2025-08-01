@@ -1,6 +1,8 @@
 package com.ttl.weatherupdate.forecast.presentation.view
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,11 +32,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -61,7 +67,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ttl.weatherupdate.forecast.utils.Utils.getDayOfWeek
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import com.ttl.weatherupdate.forecast.data.model.DailyForecastItem
 import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 import com.ttl.weatherupdate.forecast.ui.theme.cards_bg
@@ -71,7 +78,6 @@ import com.ttl.weatherupdate.forecast.ui.theme.main_card_grad_bottom
 import com.ttl.weatherupdate.forecast.ui.theme.main_card_grad_top
 import com.ttl.weatherupdate.forecast.ui.theme.text_left_grad
 import com.ttl.weatherupdate.forecast.ui.theme.text_right_grad
-import com.ttl.weatherupdate.forecast.utils.Routes
 import com.ttl.weatherupdate.forecast.utils.Utils
 import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
 import com.ttl.weatherupdate.forecast.utils.Utils.getCurrentLocation
@@ -84,6 +90,8 @@ import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
+import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
+import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import java.time.LocalTime
 
 @Composable
@@ -97,7 +105,12 @@ fun Home(
                 if (isLocationEnabled(context)) {
                     getCurrentLocation(context, onLocation = { lat, lon ->
                         Log.d("Location", "Latitude: $lat, Longitude: $lon")
-                        viewModel.loadForecastByLocation(lat, lon)
+                        viewModel.latitude = lat
+                        viewModel.longitude = lon
+                        val city = getLocationName(context, lat.toDouble(), lon.toDouble())
+                        var country = Utils.getCountryFromCity(context, city.toString())
+                        viewModel.getDatafromWeb(context,city.toString() , country.toString())
+                        viewModel.getHourlyData(context,city.toString() , country.toString())
 
                     }, onError = {
                         Log.d("Location", "Error: $it")
@@ -114,18 +127,17 @@ fun Home(
             }
         }
 
-//    LaunchedEffect(Unit) {
-//        if (ContextCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            viewModel.locationPermission = true
-//            fetchAndLoadWeather(context, viewModel)
-//        } else {
-//            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-//        }
-//    }
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            viewModel.locationPermission = true
+        } else {
+            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     setSeenOnboarding(context)
     val internet = viewModel.internet
@@ -149,47 +161,47 @@ fun Home(
 //    LaunchedEffect(internet) {
 //        viewModel.loadCacheData()
 //    }
-    if (loading) {
-        ShowLoading()
-    } else {
-        ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
-    }
 //    if (loading) {
-//        Log.d("CatchError_in_home", "loading_NoInternet")
 //        ShowLoading()
-//    } else if (!internet) {
-//        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
-//        Log.d("CatchError_in_home", "no internet")
-//        if (forcast.value == null) {
-//            ShowNoData(
-//                R.drawable.no_internet,
-//                "No Internet Connection",
-//                false,
-//                viewModel
-//            )
-//        } else {
-//            ShowUi(navController, forcast.value, viewModel)
-//        }
 //    } else {
-//        Log.d("CatchError_in_home", "yes internet")
-//        if (!locationperm) {
-//            if (forcast.value == null) {
-//                Log.d("CatchError_in_home", "no location search city")
-//                ShowNoData(
-//                    R.drawable.no_location,
-//                    "Location Not found\n\nTry searching",
-//                    true,
-//                    viewModel
-//                )
-//            } else {
-//                ShowUi(navController, forcast.value, viewModel)
-//            }
-//        } else {
-//            Log.d("CatchError_in_home", "yes internet show ui")
-//            if (forcast.value == null) ShowLoading()
-//            else ShowUi(navController, forcast.value, viewModel)
-//        }
+//        ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
 //    }
+    if (loading) {
+        Log.d("CatchError_in_home", "loading_NoInternet")
+        ShowLoading()
+    } else if (!internet) {
+        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
+        Log.d("CatchError_in_home", "no internet")
+        if (forcast.value == null) {
+            ShowNoData(
+                R.drawable.no_internet,
+                "No Internet Connection",
+                false,
+                viewModel
+            )
+        } else {
+            ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+        }
+    } else {
+        Log.d("CatchError_in_home", "yes internet")
+        if (!locationperm) {
+            if (forcast.value == null) {
+                Log.d("CatchError_in_home", "no location search city")
+                ShowNoData(
+                    R.drawable.no_location,
+                    "Location Not found\n\nTry searching",
+                    true,
+                    viewModel
+                )
+            } else {
+                ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+            }
+        } else {
+            Log.d("CatchError_in_home", "yes internet show ui")
+            if (forcast.value == null) ShowLoading()
+            else ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+        }
+    }
 
 }
 
@@ -317,14 +329,14 @@ fun ShowUi(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(Utils.getImage(forcast.get(0).condition)),
+                        painter = painterResource(Utils.getImage(forcast[0].condition)),
                         contentDescription = null,
                         modifier = Modifier
                             .size(200.dp),
                         contentScale = ContentScale.Fit
                     )
                     Text(
-                        "Feels like ${forcast.get(0).feelsLike}°C",
+                        "Feels like ${forcast.get(0).feelsLike}",
                         fontSize = 12.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Light,
@@ -362,7 +374,7 @@ fun ShowUi(
                         fontWeight = FontWeight.Light
                     )
                     Text(
-                        "Wind ${forcast[0].windSpeed} Km/h",
+                        "Wind ${forcast[0].windSpeed}",
                         fontSize = 12.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Light
@@ -387,10 +399,10 @@ fun ShowUi(
             ) {
                 Attribute(
                     R.drawable.precipitation,
-                    "Precipitation",
-                    "${forcast[0].rainChance} mm"
+                    "Rain",
+                    "${forcast[0].rainChance}"
                 )
-                Attribute(R.drawable.wind, "Wind", "${forcast[0].windSpeed} Km/h")
+                Attribute(R.drawable.wind, "Wind", "${forcast[0].windSpeed}")
 
 
             }
@@ -402,7 +414,7 @@ fun ShowUi(
                 Attribute(
                     R.drawable.humidity,
                     "Humidity",
-                    "${forcast[0].humidity}%"
+                    "${forcast[0].humidity}"
                 )
 
                 Attribute(
@@ -415,13 +427,13 @@ fun ShowUi(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Custom_divider()
-//        ScrollableRow(dailyForecastList)
+        ScrollableRow(dailyForecastList)
         Spacer(modifier = Modifier.height(8.dp))
-//        WeeklyForecastCard(forcast)
+        WeeklyForecastCard(forcast)
         Spacer(modifier = Modifier.height(8.dp))
-        GotoForecastCard(navController)
-        Spacer(modifier = Modifier.height(8.dp))
-//        DetailsCard(forcast)
+//        GotoForecastCard(navController)
+//        Spacer(modifier = Modifier.height(8.dp))
+        DetailsCard(forcast)
 
     }
 
@@ -464,7 +476,7 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
                         tint = Color.Gray, modifier = Modifier.clickable {
                             viewModel.getDatafromWeb(
                                 context,
-                                searchText,
+                                searchText.trim(),
                                 getCountryFromCity(context, searchText).toString()
                             )
                         }
@@ -518,7 +530,7 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
 }
 
 @Composable
-fun WeeklyForecastCard(forcast: ApiResponse?) {
+fun WeeklyForecastCard(forcast: List<DailyForecast>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -547,10 +559,11 @@ fun WeeklyForecastCard(forcast: ApiResponse?) {
 
         for (i in 0..6) {
             WeeklyForecastView(
-                forcast?.days[i]?.datetime.toString(),
-                forcast?.days[i]?.conditions.toString(),
-                forcast?.days[i]?.tempmax.toString(),
-                forcast?.days[i]?.tempmin.toString(),
+                forcast[i].day,
+                forcast[i].date,
+                forcast[i].condition,
+                forcast[i].maxTemp,
+                forcast[i].minTemp,
             )
         }
 
@@ -561,6 +574,7 @@ fun WeeklyForecastCard(forcast: ApiResponse?) {
 fun ScrollableRow(list1: List<DailyForecastItem>) {
     val list = list1
 
+    var selectedItem by remember { mutableStateOf<DailyForecastItem?>(null) }
     val listState = rememberLazyListState()
 
 // Scroll to current hour index
@@ -579,8 +593,15 @@ fun ScrollableRow(list1: List<DailyForecastItem>) {
             DailyForecastView(
                 item, modifier = Modifier
                     .height(160.dp)
-                    .width(100.dp), 70
+                    .width(100.dp)
+                    .clickable { selectedItem = item }, 70
             )
+        }
+
+    }
+    selectedItem?.let { item ->
+        WeatherDetailDialog(item) {
+            selectedItem = null
         }
     }
 }
@@ -659,7 +680,7 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
             Text(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                text = tempToInt(item.temp.toDouble()).toString() + "°",
+                text = item.temp,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White
             )
@@ -668,25 +689,25 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
 }
 
 @Composable
-fun WeeklyForecastView(date: String, img: String, temp_high: String, temp_low: String) {
+fun WeeklyForecastView(day: String, date: String, img: String, temp_high: String, temp_low: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = getDayOfWeek(date), color = Color.White)
+        Text(text = getDayNameFromDate(date), color = Color.White)
         Image(
             painter = painterResource(id = Utils.getImage(img)),
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
-        Text(text = "${tempToInt(temp_high.toDouble())}°C", color = Color.White)
-        Text(text = "${tempToInt(temp_low.toDouble())}°C", color = Color.White)
+        Text(text = "${temp_high} °C", color = Color.White)
+        Text(text = temp_low, color = Color.White)
     }
 }
 
 @Composable
-fun DetailsCard(forcast: ApiResponse?) {
+fun DetailsCard(forcast: List<DailyForecast>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -723,7 +744,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(Utils.getImage(forcast?.currentConditions?.icon.toString())),
+                    painter = painterResource(Utils.getImage(forcast[0].condition)),
                     null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
@@ -741,7 +762,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.feelslike.toString() + "°",
+                        forcast[0].feelsLike,
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -758,7 +779,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        tempToInt(forcast?.currentConditions?.humidity).toString() + "%",
+                        forcast[0].humidity,
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -769,18 +790,13 @@ fun DetailsCard(forcast: ApiResponse?) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Visibility: ",
+                        "Rain Chances: ",
                         color = Color.Gray,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.visibility?.let {
-                            tempToInt(
-                                it.toString().toDouble()
-                            )
-                            "m"
-                        } ?: "Good",
+                        forcast[0].rainChance,
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -797,7 +813,7 @@ fun DetailsCard(forcast: ApiResponse?) {
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        forcast?.currentConditions?.uvindex.toString(),
+                        forcast[0].uvIndex,
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -808,13 +824,13 @@ fun DetailsCard(forcast: ApiResponse?) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Dew Point: ",
+                        "Humidity: ",
                         color = Color.Gray,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        "${tempToInt(forcast?.currentConditions?.dew)}°",
+                        "${forcast[0].humidity}",
                         color = Color.White,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal
@@ -823,78 +839,79 @@ fun DetailsCard(forcast: ApiResponse?) {
             }
         }
         Text(
-            forcast?.description.toString(),
-            modifier = Modifier.padding(4.dp),
+            forcast[0].condition,
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            textAlign = TextAlign.Center,
             color = Color.Gray
         )
     }
 
 }
 
-@Composable
-fun GotoForecastCard(navController: NavController) {
-    Row(
-        modifier = Modifier
-            .clickable {
-                navController.navigate(Routes.DETAILS)
-            }
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(40.dp))
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        main_card_grad_bottom,
-                        main_card_grad_bottom,
-                        main_card_grad_top
-                    )
-                )
-            ), verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(0.8f)
-                .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                "See day by day forecasts",
-                fontSize = 12.sp,
-                color = Color.Gray,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                "Plan for next 7 days",
-                fontSize = 12.sp,
-                color = Color.White,
-                fontFamily = FontFamily.SansSerif,
-            )
-        }
-        Column(
-            modifier = Modifier
-                .weight(0.2f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(main_card_grad_bottom),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.next),
-                    contentDescription = "Arrow",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(10.dp)
-                )
-            }
-
-        }
-    }
-}
+//@Composable
+//fun GotoForecastCard(navController: NavController) {
+//    Row(
+//        modifier = Modifier
+//            .clickable {
+//                navController.navigate(Routes.DETAILS)
+//            }
+//            .fillMaxWidth()
+//            .clip(RoundedCornerShape(40.dp))
+//            .background(
+//                brush = Brush.horizontalGradient(
+//                    colors = listOf(
+//                        main_card_grad_bottom,
+//                        main_card_grad_bottom,
+//                        main_card_grad_top
+//                    )
+//                )
+//            ), verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .weight(0.8f)
+//                .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+//            verticalArrangement = Arrangement.Center,
+//        ) {
+//            Text(
+//                "See day by day forecasts",
+//                fontSize = 12.sp,
+//                color = Color.Gray,
+//                fontFamily = FontFamily.SansSerif,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//            Text(
+//                "Plan for next 7 days",
+//                fontSize = 12.sp,
+//                color = Color.White,
+//                fontFamily = FontFamily.SansSerif,
+//            )
+//        }
+//        Column(
+//            modifier = Modifier
+//                .weight(0.2f),
+//            verticalArrangement = Arrangement.Center,
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Box(
+//                modifier = Modifier
+//                    .clip(CircleShape)
+//                    .background(main_card_grad_bottom),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Icon(
+//                    painter = painterResource(R.drawable.next),
+//                    contentDescription = "Arrow",
+//                    tint = Color.White,
+//                    modifier = Modifier
+//                        .padding(12.dp)
+//                        .size(10.dp)
+//                )
+//            }
+//
+//        }
+//    }
+//}
 
 @Composable
 fun Custom_divider() {
@@ -922,6 +939,62 @@ fun fetchAndLoadWeather(context: Context, viewModel: WeatherViewModel) {
         Toast.makeText(context, "Enable location services", Toast.LENGTH_LONG).show()
         viewModel.loadCacheData()
         viewModel.locationPermission = false
+    }
+}
+
+@Composable
+fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            grad_home_above,
+                            grad_home_below
+                        )
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Weather at ${item.time}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Image(
+                    painter = painterResource(id = Utils.getImage(item.condition)),
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("🌡 Temp: ${item.temperature}", color = Color.White)
+                Text("🤒 Feels like: ${item.feelsLike}", color = Color.White)
+                Text("🌧 Rain chance: ${item.rainChance}", color = Color.White)
+                Text("📏 Rain amount: ${item.rainAmount}", color = Color.White)
+                Text("💨 Wind: ${item.wind}", color = Color.White)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
+                    Text("Close", color = Color.Black)
+                }
+            }
+        }
     }
 }
 

@@ -29,9 +29,15 @@ import java.util.Locale
 import androidx.core.content.edit
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 object Utils {
-    fun getCurrentLocation(context: Context, onLocation: (String, String) -> Unit , onError:(Boolean)->Unit) {
+    fun getCurrentLocation(
+        context: Context,
+        onLocation: (String, String) -> Unit,
+        onError: (Boolean) -> Unit
+    ) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -48,18 +54,20 @@ object Utils {
         }
     }
 
-    fun getDayOfWeek(dateString: String?): String {
+    fun getDayNameFromDate(date: String): String {
         return try {
-            if (dateString.isNullOrBlank() || dateString == "null") {
-                ""
-            } else {
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault())
-                val date = LocalDate.parse(dateString, formatter)
-                date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
-            }
+            val inputFormat = SimpleDateFormat("d MMM", Locale.ENGLISH)
+            val parsedDate = inputFormat.parse(date)
+
+            // Add the current year to make it a complete date
+            val calendar = Calendar.getInstance()
+            calendar.time = parsedDate!!
+            calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR))
+
+            val outputFormat = SimpleDateFormat("EEEE", Locale.ENGLISH)
+            outputFormat.format(calendar.time)
         } catch (e: Exception) {
-            e.printStackTrace()
-            ""
+            "Unknown"
         }
     }
 
@@ -85,12 +93,17 @@ object Utils {
     }
 
     fun getDailyForecastItems(day: List<HourlyForecast>): List<DailyForecastItem> {
-
-        return hours.take(24).map { hour ->
+        return day.mapIndexed { index, hourly ->
             DailyForecastItem(
-                time = hour.datetime?.substring(0, 5) ?: "--:--", // keep "HH:mm"
-                img = hour.icon ?: "unknown",
-                temp = hour.temp?.toString() ?: "--"
+                time = formatHour(index),
+                img = hourly.condition,
+                temp = hourly.temperature,
+                temperature = hourly.temperature,
+                condition = hourly.condition,
+                feelsLike = hourly.feelsLike,
+                wind = hourly.wind,
+                rainAmount = hourly.rainAmount,
+                rainChance = hourly.rainChance
             )
         }
     }
@@ -133,7 +146,10 @@ object Utils {
         return try {
             val geocoder = Geocoder(context, Locale.getDefault())
             val addresses = geocoder.getFromLocation(lat, lon, 1)
+
+            Log.d("CatchError_getCountry", addresses?.get(0)?.locality.toString())
             addresses?.get(0)?.locality
+
         } catch (e: IOException) {
             e.printStackTrace()
             null
@@ -145,6 +161,7 @@ object Utils {
         return try {
             val addresses = geocoder.getFromLocationName(cityName, 1)
             if (!addresses.isNullOrEmpty()) {
+                Log.d("CatchError_getCountry", addresses[0].countryName.toString())
                 addresses[0].countryName
             } else {
                 null
@@ -160,5 +177,17 @@ object Utils {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
+
+    fun formatHour(index: Int): String {
+        val hour24 = index % 24  // just in case list has more than 24 entries
+        val isAM = hour24 < 12
+        val hour12 = when (hour24 % 12) {
+            0 -> 12
+            else -> hour24 % 12
+        }
+        val period = if (isAM) "am" else "pm"
+        return "$hour12$period"
+    }
+
 
 }

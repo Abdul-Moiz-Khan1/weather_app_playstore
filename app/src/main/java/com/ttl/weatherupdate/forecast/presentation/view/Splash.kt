@@ -90,9 +90,9 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                 viewModel.latitude = lat
                 viewModel.longitude = lon
                 val city = getLocationName(context, lat.toDouble(), lon.toDouble())
-                val country = Utils.getCountryFromCity(context, city.toString())
+                var country = Utils.getCountryFromCity(context, city.toString())
                 viewModel.getDatafromWeb(context,city.toString() , country.toString())
-                viewModel.getHourlyData()
+                viewModel.getHourlyData(context,city.toString() , country.toString())
             }, onError = {
                 Log.d("Location", "Error: $it")
                 viewModel.locationPermission = false
