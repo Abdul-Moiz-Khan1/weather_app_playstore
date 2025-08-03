@@ -11,6 +11,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ttl.weatherupdate.forecast.data.local.WeatherDao
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,8 @@ import com.ttl.weatherupdate.forecast.data.repository.WeatherRepository
 import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import javax.inject.Inject
 import kotlin.toString
@@ -27,7 +30,8 @@ import kotlin.toString
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
-    private val networkStatusTracker: NetworkStatusTracker
+    private val networkStatusTracker: NetworkStatusTracker,
+    private val dao: WeatherDao
 ) :
     ViewModel() {
 
@@ -42,11 +46,11 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-        private val _weeklyForecasts = MutableLiveData<List<DailyForecast>>()
-        val weeklyForecasts: LiveData<List<DailyForecast>> get() = _weeklyForecasts
+    private val _weeklyForecasts = MutableLiveData<List<DailyForecast>>()
+    val weeklyForecasts: LiveData<List<DailyForecast>> get() = _weeklyForecasts
 
-        private val _hourlyForecasts = MutableLiveData<List<HourlyForecast>>()
-        val hourlyForecasts: LiveData<List<HourlyForecast>> get() = _hourlyForecasts
+    private val _hourlyForecasts = MutableLiveData<List<HourlyForecast>>()
+    val hourlyForecasts: LiveData<List<HourlyForecast>> get() = _hourlyForecasts
 
     private val _forcast = MutableLiveData<ApiResponse?>()
     val forecast: LiveData<ApiResponse?> = _forcast
@@ -60,16 +64,18 @@ class WeatherViewModel @Inject constructor(
     var longitude by mutableStateOf("")
 
     fun getDatafromWeb(context: Context, city: String, country: String) {
-        if(country == "United States"){
+        if (country == "United States") {
             location_country = "usa"
-        }else if (country.contains("united")== true && country.contains("kingdom")){
+        } else if (country.contains("United") == true && country.contains("kingdom")) {
             location_country = "uk"
-        }else if (country.contains(" ")){
-            location_country= country.replace(" ", "-")
+        } else if (country.contains(" ")) {
+            location_country = country.replace(" ", "-")
+        } else {
+            location_country = country
         }
-        if(city.contains(" ")){
+        if (city.contains(" ")) {
             location_city = city.replace(" ", "-")
-        }else{
+        } else {
             location_city = city
         }
 
@@ -110,6 +116,9 @@ class WeatherViewModel @Inject constructor(
                         }
 
                         _weeklyForecasts.postValue(allForecasts) // 🔥 Post once only
+                        viewModelScope.launch {
+                            saveForecastsDaily(weeklyForecasts.value)
+                        }
                     },
                     onError = {
                         Log.d("CatchError_viewmodel", "inError get_from_web: $it")
@@ -125,16 +134,18 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun getHourlyData(context: Context, city: String, country: String) {
-        if(country == "United States"){
+        if (country == "United States") {
             location_country = "usa"
-        }else if (country.contains("united")== true && country.contains("kingdom")){
+        } else if (country.contains("united") == true && country.contains("kingdom")) {
             location_country = "uk"
-        }else if (country.contains(" ")){
-            location_country= country.replace(" ", "-")
+        } else if (country.contains(" ")) {
+            location_country = country.replace(" ", "-")
+        } else {
+            location_country = country
         }
-        if(city.contains(" ")){
+        if (city.contains(" ")) {
             location_city = city.replace(" ", "-")
-        }else{
+        } else {
             location_city = city
         }
         viewModelScope.launch {
@@ -162,8 +173,11 @@ class WeatherViewModel @Inject constructor(
                                 Log.d("HourlyForecast", forecast.toString())
                             }
                         }
-
                         _hourlyForecasts.postValue(allForecasts) // ✅ Post once after loop
+                        viewModelScope.launch {
+                            saveForecastsHourly(hourlyForecasts.value)
+                        }
+
                     },
                     onError = {
                         Log.d("CatchError_viewmodel", "inError get_hourly_data: $it")
@@ -177,54 +191,88 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    fun loadForcast(city: String, days: Int) {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                val data = repository.getForecast(city)
-                _forcast.value = data
-                Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
-                Log.d("CatchError,inViewModel", data.toString())
+    fun saveForecastsDaily( daily: List<DailyForecast>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.clearDaily()
+            dao.insertDailyForecast(daily.map { it.toEntity() })
+        }
+    }
 
-            } catch (e: Exception) {
-                Log.e("eror", "Error: ${e.message}")
-            } finally {
-                isLoading = false
+    fun saveForecastsHourly(hourly: List<HourlyForecast>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.clearHourly()
+            dao.insertHourlyForecast(hourly.map { it.toEntity() })
+
+        }
+    }
+
+    fun loadForecastsFromCache() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val hourly = dao.getHourlyForecast().map { it.toModel() }
+            val daily = dao.getDailyForecast().map { it.toModel() }
+
+            withContext(Dispatchers.Main) {
+                _hourlyForecasts.value = hourly
+                _weeklyForecasts.value = daily
             }
         }
     }
 
-    fun loadForecastByLocation(lat: String, lng: String) {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                val data = repository.getForecast("$lat,$lng")
-                _forcast.value = data
-                Log.d("CatchError,inViewModel,forcast", forecast.value.toString())
-                Log.d("CatchError,inViewModel", data.toString())
 
-            } catch (e: Exception) {
-                Log.e("eror", "Error: ${e.message}")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+    fun HourlyForecast.toEntity() = HourlyForecast(
+        time = time,
+        temperature = temperature,
+        condition = condition,
+        feelsLike = feelsLike,
+        wind = wind,
+        humidity = humidity,
+        rainChance = rainChance,
+        rainAmount = rainAmount
+    )
 
-    fun loadCacheData() {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                val data = repository.getCachedData()
-                _forcast.value = data
-                Log.d("CatchError_loadcache,inViewModel", data.toString())
-            } catch (e: Exception) {
-                Log.d("CatchError,inViewModel_loadcache", e.message.toString())
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+    fun HourlyForecast.toModel() = HourlyForecast(
+        time = time,
+        temperature = temperature,
+        condition = condition,
+        feelsLike = feelsLike,
+        wind = wind,
+        humidity = humidity,
+        rainChance = rainChance,
+        rainAmount = rainAmount
+    )
+
+    fun DailyForecast.toEntity() = DailyForecast(
+        day = day,
+        date = date,
+        minTemp = minTemp,
+        maxTemp = maxTemp,
+        condition = condition,
+        feelsLike = feelsLike,
+        windSpeed = windSpeed,
+        humidity = humidity,
+        rainChance = rainChance,
+        rainAmount = rainAmount,
+        uvIndex = uvIndex,
+        sunrise = sunrise,
+        sunset = sunset
+    )
+
+    fun DailyForecast.toModel() = DailyForecast(
+        day = day,
+        date = date,
+        minTemp = minTemp,
+        maxTemp = maxTemp,
+        condition = condition,
+        feelsLike = feelsLike,
+        windSpeed = windSpeed,
+        humidity = humidity,
+        rainChance = rainChance,
+        rainAmount = rainAmount,
+        uvIndex = uvIndex,
+        sunrise = sunrise,
+        sunset = sunset
+    )
+
 
 
 }
