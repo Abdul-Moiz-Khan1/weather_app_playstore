@@ -143,6 +143,19 @@ object Utils {
         val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
         prefs.edit { putBoolean("seen", true) }
     }
+    fun setSavedCity(context: Context, city: String) {
+        val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
+        prefs.edit {
+            putString("saved_city", city)
+        }
+    }
+
+    // Retrieve saved city
+    fun getSavedCity(context: Context): String? {
+        val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
+        return prefs.getString("saved_city", null)
+    }
+
 
     fun getLocationName(context: Context, lat: Double, lon: Double , viewModel: WeatherViewModel): String? {
         return try {

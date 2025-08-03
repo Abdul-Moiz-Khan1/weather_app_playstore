@@ -21,6 +21,7 @@ import com.ttl.weatherupdate.forecast.data.repository.WeatherRepository
 import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import com.ttl.weatherupdate.forecast.utils.Utils.setSavedCity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -75,11 +76,9 @@ class WeatherViewModel @Inject constructor(
         }
         if (city.contains(" ")) {
             location_city = city.replace(" ", "-")
-        } else {
+        } else if (location_city.isEmpty()) {
             location_city = city
         }
-
-
 
         viewModelScope.launch {
             isLoading = true
@@ -125,6 +124,7 @@ class WeatherViewModel @Inject constructor(
                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                     }
                 )
+                setSavedCity(context, location_city)
             } catch (e: Exception) {
                 Log.d("CatchError_viewmodel", "inError get_from_web: ${e.message}")
             } finally {
@@ -191,7 +191,7 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    fun saveForecastsDaily( daily: List<DailyForecast>) {
+    fun saveForecastsDaily(daily: List<DailyForecast>) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.clearDaily()
             dao.insertDailyForecast(daily.map { it.toEntity() })
@@ -272,7 +272,6 @@ class WeatherViewModel @Inject constructor(
         sunrise = sunrise,
         sunset = sunset
     )
-
 
 
 }

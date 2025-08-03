@@ -91,6 +91,7 @@ import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
 import java.time.LocalTime
 
 @Composable
@@ -505,6 +506,7 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
                         painter = painterResource(R.drawable.search),
                         contentDescription = null,
                         tint = Color.Gray, modifier = Modifier.clickable {
+                            viewModel.location_city = searchText.trim()
                             viewModel.getDatafromWeb(
                                 context,
                                 searchText.trim(),
@@ -517,9 +519,12 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
         )
 
     } else {
-        val address = viewModel.location_city
-        var locationName by remember { mutableStateOf<String?>(address) }
+        var address = viewModel.location_city
         val context = LocalContext.current
+        if(address.isEmpty()){
+            address = getSavedCity(context).toString()
+        }
+        var locationName by remember { mutableStateOf<String?>(address) }
 //        LaunchedEffect(address) {
 //            if (!forcast?.address.isNullOrEmpty() && address.contains(",")) {
 //                val parts = address.split(",")
