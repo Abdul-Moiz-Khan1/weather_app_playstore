@@ -65,9 +65,10 @@ class WeatherViewModel @Inject constructor(
     var longitude by mutableStateOf("")
 
     fun getDatafromWeb(context: Context, city: String, country: String) {
+        Log.d("in_viewmodel" , "getDatafromweb ${country} ${city}")
         if (country == "United States") {
             location_country = "usa"
-        } else if (country.contains("United") == true && country.contains("kingdom")) {
+        } else if (country.contains("United") == true || country.contains("Kingdom") == true) {
             location_country = "uk"
         } else if (country.contains(" ")) {
             location_country = country.replace(" ", "-")
@@ -79,6 +80,8 @@ class WeatherViewModel @Inject constructor(
         } else if (location_city.isEmpty()) {
             location_city = city
         }
+
+        Log.d("in_viewmodel" , "getDatafromweb ${location_country} ${location_city}")
 
         viewModelScope.launch {
             isLoading = true
@@ -134,9 +137,10 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun getHourlyData(context: Context, city: String, country: String) {
+        Log.d("in_viewmodel" , "getHourlyData ${country} ${city}")
         if (country == "United States") {
             location_country = "usa"
-        } else if (country.contains("united") == true && country.contains("kingdom")) {
+        } else if (country.contains("United") == true || country.contains("Kingdom") == true)  {
             location_country = "uk"
         } else if (country.contains(" ")) {
             location_country = country.replace(" ", "-")

@@ -31,6 +31,7 @@ import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.time.LocalTime
 import java.util.Calendar
 
 object Utils {
@@ -197,11 +198,14 @@ object Utils {
     }
 
     fun formatHour(index: Int): String {
-        val hour24 = index % 24  // just in case list has more than 24 entries
-        val isAM = hour24 < 12
-        val hour12 = when (hour24 % 12) {
+        val now = LocalTime.now()
+        val baseHour = if (now.minute > 0) now.hour + 1 else now.hour
+        val targetHour = (baseHour + index - 1) % 24
+
+        val isAM = targetHour < 12
+        val hour12 = when (targetHour % 12) {
             0 -> 12
-            else -> hour24 % 12
+            else -> targetHour % 12
         }
         val period = if (isAM) "am" else "pm"
         return "$hour12$period"

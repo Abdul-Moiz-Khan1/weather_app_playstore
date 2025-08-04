@@ -113,8 +113,7 @@ fun Home(
                         val city =
                             getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
                         var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
-                        viewModel.getDatafromWeb(context, city.toString(), country.toString())
-                        viewModel.getHourlyData(context, city.toString(), country.toString())
+                        getData(viewModel, context, city.toString(), country.toString())
 
                     }, onError = {
                         Log.d("Location", "Error: $it")
@@ -150,7 +149,6 @@ fun Home(
         "size ${hourlyForecasts.size} hourly forecast from web: ${hourlyForecasts.toString()}"
     )
 
-    Log.d("CatchErrorHome", "forecast: weekly:${weeklyForecasts} hourly:${hourlyForecasts}")
     Log.d("CatchErrorHome_permissions", "internet: $internet")
     Log.d("CatchErrorHome_permissions", "location: $locationperm")
 
@@ -187,7 +185,7 @@ fun Home(
         if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
             try {
                 viewModel.loadForecastsFromCache()
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 Log.d("CatchError_in_home", "catch_NoInternet: ${e.message}")
             }
             ShowNoData(
@@ -205,7 +203,7 @@ fun Home(
             if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
                 try {
                     viewModel.loadForecastsFromCache()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     Log.d("CatchError_in_home", "catch_NoInternet: ${e.message}")
                 }
                 Log.d("CatchError_in_home", "no location search city")
@@ -230,6 +228,7 @@ fun Home(
 
 
 }
+
 
 @Composable
 fun ShowNoData(image: Int, text: String, searchable: Boolean, viewModel: WeatherViewModel) {
@@ -299,11 +298,8 @@ fun CustomSearch(viewModel: WeatherViewModel) {
                     painter = painterResource(R.drawable.search),
                     contentDescription = null,
                     tint = Color.Gray, modifier = Modifier.clickable {
-                        viewModel.getDatafromWeb(
-                            context,
-                            searchText.trim(),
-                            getCountryFromCity(context, searchText, viewModel).toString()
-                        )
+                        val country = getCountryFromCity(context, searchText, viewModel).toString()
+                        getData(viewModel, context, searchText.trim(), country)
                     }
                 )
             }
@@ -338,7 +334,7 @@ fun ShowUi(
     ) {
         val dailyForecastList = getDailyForecastItems(hourlyForecasts)
         Spacer(modifier = Modifier.height(8.dp))
-        LocationSearchBar(forcast, viewModel)
+        LocationSearchBar(viewModel)
 
         Box(
             modifier = Modifier
@@ -463,8 +459,6 @@ fun ShowUi(
         Spacer(modifier = Modifier.height(8.dp))
         WeeklyForecastCard(forcast)
         Spacer(modifier = Modifier.height(8.dp))
-//        GotoForecastCard(navController)
-//        Spacer(modifier = Modifier.height(8.dp))
         DetailsCard(forcast)
 
     }
@@ -472,7 +466,7 @@ fun ShowUi(
 }
 
 @Composable
-fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel) {
+fun LocationSearchBar(viewModel: WeatherViewModel) {
     var showSearch by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
 
@@ -498,21 +492,22 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
                 .fillMaxWidth(0.8f)
                 .padding(4.dp),
             trailingIcon = {
+
+                val context = LocalContext.current
                 IconButton(onClick = {
                     showSearch = false
+                    viewModel.location_city = searchText.trim()
+                    val country = getCountryFromCity(context, searchText, viewModel).toString()
+
+                    Log.d("LocationSearch", "Calling APIs with: $searchText, $country")
+
+                    getData(viewModel, context, searchText.trim(), country)
+
                 }) {
-                    val context = LocalContext.current
                     Icon(
                         painter = painterResource(R.drawable.search),
                         contentDescription = null,
-                        tint = Color.Gray, modifier = Modifier.clickable {
-                            viewModel.location_city = searchText.trim()
-                            viewModel.getDatafromWeb(
-                                context,
-                                searchText.trim(),
-                                getCountryFromCity(context, searchText, viewModel).toString()
-                            )
-                        }
+                        tint = Color.Gray, modifier = Modifier
                     )
                 }
             }
@@ -521,7 +516,7 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
     } else {
         var address = viewModel.location_city
         val context = LocalContext.current
-        if(address.isEmpty()){
+        if (address.isEmpty() || address.isBlank() || address == "null") {
             address = getSavedCity(context).toString()
         }
         var locationName by remember { mutableStateOf<String?>(address) }
@@ -613,13 +608,13 @@ fun ScrollableRow(list1: List<DailyForecastItem>) {
     var selectedItem by remember { mutableStateOf<DailyForecastItem?>(null) }
     val listState = rememberLazyListState()
 
-// Scroll to current hour index
-    LaunchedEffect(Unit) {
-        val currentHour = LocalTime.now().hour
-        if (currentHour in list.indices) {
-            listState.scrollToItem(currentHour)
-        }
-    }
+//// Scroll to current hour index
+//    LaunchedEffect(Unit) {
+//        val currentHour = LocalTime.now().hour
+//        if (currentHour in list.indices) {
+//            listState.scrollToItem(currentHour)
+//        }
+//    }
     LazyRow(
         state = listState,
         modifier = Modifier
@@ -781,7 +776,7 @@ fun DetailsCard(forcast: List<DailyForecast>) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.35f),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -792,7 +787,7 @@ fun DetailsCard(forcast: List<DailyForecast>) {
                     contentScale = ContentScale.Fit
                 )
             }
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(0.65f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -892,70 +887,6 @@ fun DetailsCard(forcast: List<DailyForecast>) {
 
 }
 
-//@Composable
-//fun GotoForecastCard(navController: NavController) {
-//    Row(
-//        modifier = Modifier
-//            .clickable {
-//                navController.navigate(Routes.DETAILS)
-//            }
-//            .fillMaxWidth()
-//            .clip(RoundedCornerShape(40.dp))
-//            .background(
-//                brush = Brush.horizontalGradient(
-//                    colors = listOf(
-//                        main_card_grad_bottom,
-//                        main_card_grad_bottom,
-//                        main_card_grad_top
-//                    )
-//                )
-//            ), verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .weight(0.8f)
-//                .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-//            verticalArrangement = Arrangement.Center,
-//        ) {
-//            Text(
-//                "See day by day forecasts",
-//                fontSize = 12.sp,
-//                color = Color.Gray,
-//                fontFamily = FontFamily.SansSerif,
-//                fontWeight = FontWeight.SemiBold
-//            )
-//            Text(
-//                "Plan for next 7 days",
-//                fontSize = 12.sp,
-//                color = Color.White,
-//                fontFamily = FontFamily.SansSerif,
-//            )
-//        }
-//        Column(
-//            modifier = Modifier
-//                .weight(0.2f),
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Box(
-//                modifier = Modifier
-//                    .clip(CircleShape)
-//                    .background(main_card_grad_bottom),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Icon(
-//                    painter = painterResource(R.drawable.next),
-//                    contentDescription = "Arrow",
-//                    tint = Color.White,
-//                    modifier = Modifier
-//                        .padding(12.dp)
-//                        .size(10.dp)
-//                )
-//            }
-//
-//        }
-//    }
-//}
 
 @Composable
 fun Custom_divider() {
@@ -1010,7 +941,6 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
                 Text("🌡 Temp: ${item.temperature}", color = Color.White)
                 Text("🤒 Feels like: ${item.feelsLike}", color = Color.White)
                 Text("🌧 Rain chance: ${item.rainChance}", color = Color.White)
-                Text("📏 Rain amount: ${item.rainAmount}", color = Color.White)
                 Text("💨 Wind: ${item.wind}", color = Color.White)
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -1026,164 +956,28 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
     }
 }
 
-//
-//@Composable
-//fun ShowUi(navController: NavController, forcast: ApiResponse?, viewModel: WeatherViewModel) {
-//    val scrollState = rememberScrollState()
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .navigationBarsPadding()
-//            .verticalScroll(scrollState)
-//            .background(
-//                brush = Brush.verticalGradient(
-//                    colors = listOf(
-//                        grad_home_above,
-//                        grad_home_above,
-//                        grad_home_below
-//                    )
-//                )
-//            )
-//            .padding(top = 32.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        val dailyForecastList = getDailyForecastItems(forcast?.days?.get(0))
-//        Spacer(modifier = Modifier.height(8.dp))
-//        LocationSearchBar(forcast, viewModel)
-//
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .fillMaxHeight(0.15f),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(8.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Column(
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxWidth(),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Center
-//                ) {
-//                    Image(
-//                        painter = painterResource(Utils.getImage(forcast?.currentConditions?.conditions.toString())),
-//                        contentDescription = null,
-//                        modifier = Modifier
-//                            .size(200.dp),
-//                        contentScale = ContentScale.Fit
-//                    )
-//                    Text(
-//                        "Feels like ${forcast?.currentConditions?.feelslike}°C",
-//                        fontSize = 12.sp,
-//                        color = Color.White,
-//                        fontWeight = FontWeight.Light,
-//                        textAlign = TextAlign.Center,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(top = 8.dp)
-//                    )
-//                }
-//
-//                Column(
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxWidth(),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Center
-//                ) {
-//                    Text(
-//                        "${Utils.tempToInt(forcast?.currentConditions?.temp)}°",
-//                        fontSize = 60.sp,
-//                        textAlign = TextAlign.Center,
-//                        style = TextStyle(
-//                            brush = Brush.horizontalGradient(
-//                                colors = listOf(
-//                                    text_left_grad,
-//                                    text_right_grad
-//                                )
-//                            )
-//                        )
-//                    )
-//                    Text(
-//                        "${forcast?.currentConditions?.conditions}",
-//                        fontSize = 12.sp,
-//                        color = Color.White,
-//                        fontWeight = FontWeight.Light
-//                    )
-//                    Text(
-//                        "Wind ${forcast?.currentConditions?.windspeed} Km/h",
-//                        fontSize = 12.sp,
-//                        color = Color.Gray,
-//                        fontWeight = FontWeight.Light
-//                    )
-//                }
-//            }
-//        }
-//
-//        Custom_divider()
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Column(//attributes
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .fillMaxHeight(0.15f),
-//            verticalArrangement = Arrangement.SpaceEvenly,
-//            horizontalAlignment = Alignment.Start
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.SpaceAround
-//            ) {
-//                Attribute(
-//                    R.drawable.precipitation,
-//                    "Precipitation",
-//                    "${forcast?.currentConditions?.precip} mm"
-//                )
-//                Attribute(R.drawable.wind, "Wind", "${forcast?.currentConditions?.windspeed} Km/h")
-//
-//
-//            }
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.SpaceAround
-//            ) {
-//                Attribute(
-//                    R.drawable.humidity,
-//                    "Humidity",
-//                    "${forcast?.currentConditions?.humidity}%"
-//                )
-//
-//                Attribute(
-//                    R.drawable.sunset,
-//                    "Sunset",
-//                    forcast?.currentConditions?.sunset.toString().dropLast(3)
-//                )
-//
-//            }
-//        }
-//        Spacer(modifier = Modifier.height(4.dp))
-//        Custom_divider()
-//        ScrollableRow(dailyForecastList)
-//        Spacer(modifier = Modifier.height(8.dp))
-//        WeeklyForecastCard(forcast)
-//        Spacer(modifier = Modifier.height(8.dp))
-//        GotoForecastCard(navController)
-//        Spacer(modifier = Modifier.height(8.dp))
-//        DetailsCard(forcast)
-//
-//    }
-//
-//}
+fun getData(viewModel: WeatherViewModel, context: Context, city: String, country: String) {
+    Log.d("inHome", "getDataWEEKLY ${country} ${city}")
+    viewModel.getDatafromWeb(context, city.toString(), country.toString())
+    Log.d("inHome", "getDataHOURLY ${country} ${city}")
+    viewModel.getHourlyData(context, city.toString(), country.toString())
+}
 
+//.clickable {
+//    viewModel.location_city = searchText.trim()
+//    val country =
+//        getCountryFromCity(context, searchText, viewModel).toString()
 //
-//@Preview(showBackground = true)
-//@Composable
-//fun preview(modifier: Modifier = Modifier) {
-//    ShowNoInternet()
+//
+//    viewModel.getHourlyData(
+//        context,
+//        searchText.trim(), country
+//    )
+//    Log.d("LocationSearch", "Calling getHourlyData with $searchText and $country")
+//    viewModel.getDatafromWeb(
+//        context,
+//        searchText.trim(),
+//        country
+//    )
+//
 //}

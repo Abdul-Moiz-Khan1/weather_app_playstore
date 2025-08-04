@@ -24,9 +24,12 @@ class WeatherRepository @Inject constructor(
         onError: (String) -> Unit
     ) = withContext(Dispatchers.IO) {
         try {
+            Log.d("weeklyyURL ", "https://www.timeanddate.com/weather/${country}/${city}/ext")
+
             val doc =
                 Jsoup.connect("https://www.timeanddate.com/weather/${country}/${city}/ext")
                     .get()
+
             val rows = doc.select("table.zebra.tb-wt.fw.va-m tbody tr")
             onSucess(rows)
         } catch (e: Exception) {
@@ -42,10 +45,11 @@ class WeatherRepository @Inject constructor(
         onError: (String) -> Unit
     ) = withContext(Dispatchers.IO) {
         try {
+            Log.d("hourlyURL ", "https://www.timeanddate.com/weather/${location_country}/${location_city}/hourly")
+
             val doc_hourly =
                 Jsoup.connect("https://www.timeanddate.com/weather/${location_country}/${location_city}/hourly")
                     .get()
-            Log.d("hourlybody ", doc_hourly.body().text())
             val rows_hourly = doc_hourly.select("table.zebra.tb-wt.fw.va-m tbody tr")
             onSucess(rows_hourly)
         } catch (e: Exception) {
