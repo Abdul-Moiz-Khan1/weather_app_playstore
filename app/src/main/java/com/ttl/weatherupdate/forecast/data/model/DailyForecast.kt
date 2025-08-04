@@ -1,6 +1,12 @@
 package com.ttl.weatherupdate.forecast.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+
+@Entity(tableName = "daily_forecast")
 data class DailyForecast(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val day: String,
     val date: String,
     val minTemp: String,

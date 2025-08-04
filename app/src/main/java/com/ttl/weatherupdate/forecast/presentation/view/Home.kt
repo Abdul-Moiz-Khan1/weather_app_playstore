@@ -70,7 +70,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.ttl.weatherupdate.forecast.data.model.DailyForecastItem
-import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 import com.ttl.weatherupdate.forecast.ui.theme.cards_bg
 import com.ttl.weatherupdate.forecast.ui.theme.grad_home_above
 import com.ttl.weatherupdate.forecast.ui.theme.grad_home_below
@@ -92,6 +91,7 @@ import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
 import java.time.LocalTime
 
 @Composable
@@ -99,18 +99,22 @@ fun Home(
     navController: NavController, viewModel: WeatherViewModel
 ) {
     val context = LocalContext.current
+
+    var permissionChecked by remember { mutableStateOf(false) }
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
+                permissionChecked = true
                 if (isLocationEnabled(context)) {
                     getCurrentLocation(context, onLocation = { lat, lon ->
                         Log.d("Location", "Latitude: $lat, Longitude: $lon")
                         viewModel.latitude = lat
                         viewModel.longitude = lon
-                        val city = getLocationName(context, lat.toDouble(), lon.toDouble())
-                        var country = Utils.getCountryFromCity(context, city.toString())
-                        viewModel.getDatafromWeb(context,city.toString() , country.toString())
-                        viewModel.getHourlyData(context,city.toString() , country.toString())
+                        val city =
+                            getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
+                        var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
+                        viewModel.getDatafromWeb(context, city.toString(), country.toString())
+                        viewModel.getHourlyData(context, city.toString(), country.toString())
 
                     }, onError = {
                         Log.d("Location", "Error: $it")
@@ -122,57 +126,70 @@ fun Home(
                         .show()
                 }
             } else {
+                permissionChecked = true
                 viewModel.locationPermission = false
                 Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
 
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            viewModel.locationPermission = true
-        } else {
-            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-    }
 
     setSeenOnboarding(context)
     val internet = viewModel.internet
     val locationperm = viewModel.locationPermission
     val loading = viewModel.isLoading
-    val forcast = viewModel.forecast.observeAsState()
-
 
     val weeklyForecasts by viewModel.weeklyForecasts.observeAsState(emptyList())
     val hourlyForecasts by viewModel.hourlyForecasts.observeAsState(emptyList())
 
-//    val forcast = weeklyforecast[0]
+    Log.d(
+        "CatchErrorHome",
+        "size ${weeklyForecasts.size} weeklyforecast from web: ${weeklyForecasts.toString()}"
+    )
+    Log.d(
+        "CatchErrorHome",
+        "size ${hourlyForecasts.size} hourly forecast from web: ${hourlyForecasts.toString()}"
+    )
 
-    Log.d("CatchErrorHome", "size ${weeklyForecasts.size} weeklyforecast from web: ${weeklyForecasts.toString()}")
-    Log.d("CatchErrorHome", "size ${hourlyForecasts.size} hourly forecast from web: ${hourlyForecasts.toString()}")
-
-    Log.d("CatchErrorHome", "forecast: ${forcast.value}")
+    Log.d("CatchErrorHome", "forecast: weekly:${weeklyForecasts} hourly:${hourlyForecasts}")
     Log.d("CatchErrorHome_permissions", "internet: $internet")
     Log.d("CatchErrorHome_permissions", "location: $locationperm")
 
-//    LaunchedEffect(internet) {
-//        viewModel.loadCacheData()
-//    }
-//    if (loading) {
-//        ShowLoading()
-//    } else {
-//        ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
-//    }
-    if (loading) {
+    LaunchedEffect(Unit) {
+        viewModel.loadForecastsFromCache()
+    }
+
+    LaunchedEffect(Unit) {
+        try {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                viewModel.locationPermission = true
+                permissionChecked = true
+            } else {
+                launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
+        } catch (e: Exception) {
+            Log.d("CatchError_in_home", "error: ${e.message}")
+            permissionChecked = true
+        }
+    }
+
+    if (!permissionChecked) {
+        ShowLoading() // Optional while waiting
+    } else if (loading) {
         Log.d("CatchError_in_home", "loading_NoInternet")
         ShowLoading()
     } else if (!internet) {
-        Toast.makeText(LocalContext.current, "No Internet Connection", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show()
         Log.d("CatchError_in_home", "no internet")
-        if (forcast.value == null) {
+        if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
+            try {
+                viewModel.loadForecastsFromCache()
+            }catch (e: Exception){
+                Log.d("CatchError_in_home", "catch_NoInternet: ${e.message}")
+            }
             ShowNoData(
                 R.drawable.no_internet,
                 "No Internet Connection",
@@ -180,12 +197,17 @@ fun Home(
                 viewModel
             )
         } else {
-            ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+            ShowUi(navController, weeklyForecasts, viewModel, hourlyForecasts)
         }
     } else {
         Log.d("CatchError_in_home", "yes internet")
         if (!locationperm) {
-            if (forcast.value == null) {
+            if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
+                try {
+                    viewModel.loadForecastsFromCache()
+                }catch (e: Exception){
+                    Log.d("CatchError_in_home", "catch_NoInternet: ${e.message}")
+                }
                 Log.d("CatchError_in_home", "no location search city")
                 ShowNoData(
                     R.drawable.no_location,
@@ -194,14 +216,18 @@ fun Home(
                     viewModel
                 )
             } else {
-                ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+                ShowUi(navController, weeklyForecasts, viewModel, hourlyForecasts)
             }
         } else {
             Log.d("CatchError_in_home", "yes internet show ui")
-            if (forcast.value == null) ShowLoading()
-            else ShowUi(navController, weeklyForecasts, viewModel , hourlyForecasts)
+            if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
+                ShowLoading()
+            } else {
+                ShowUi(navController, weeklyForecasts, viewModel, hourlyForecasts)
+            }
         }
     }
+
 
 }
 
@@ -245,6 +271,7 @@ fun ShowNoData(image: Int, text: String, searchable: Boolean, viewModel: Weather
 @Composable
 fun CustomSearch(viewModel: WeatherViewModel) {
     var searchText by remember { mutableStateOf("") }
+    val context = LocalContext.current
     TextField(
         value = searchText,
         onValueChange = { searchText = it },
@@ -272,7 +299,11 @@ fun CustomSearch(viewModel: WeatherViewModel) {
                     painter = painterResource(R.drawable.search),
                     contentDescription = null,
                     tint = Color.Gray, modifier = Modifier.clickable {
-                        viewModel.loadForcast(searchText, 6)
+                        viewModel.getDatafromWeb(
+                            context,
+                            searchText.trim(),
+                            getCountryFromCity(context, searchText, viewModel).toString()
+                        )
                     }
                 )
             }
@@ -370,6 +401,7 @@ fun ShowUi(
                     Text(
                         forcast.get(0).condition,
                         fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
                         color = Color.White,
                         fontWeight = FontWeight.Light
                     )
@@ -474,10 +506,11 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
                         painter = painterResource(R.drawable.search),
                         contentDescription = null,
                         tint = Color.Gray, modifier = Modifier.clickable {
+                            viewModel.location_city = searchText.trim()
                             viewModel.getDatafromWeb(
                                 context,
                                 searchText.trim(),
-                                getCountryFromCity(context, searchText).toString()
+                                getCountryFromCity(context, searchText, viewModel).toString()
                             )
                         }
                     )
@@ -486,9 +519,12 @@ fun LocationSearchBar(forcast: List<DailyForecast>, viewModel: WeatherViewModel)
         )
 
     } else {
-        val address = viewModel.location_city
-        var locationName by remember { mutableStateOf<String?>(address) }
+        var address = viewModel.location_city
         val context = LocalContext.current
+        if(address.isEmpty()){
+            address = getSavedCity(context).toString()
+        }
+        var locationName by remember { mutableStateOf<String?>(address) }
 //        LaunchedEffect(address) {
 //            if (!forcast?.address.isNullOrEmpty() && address.contains(",")) {
 //                val parts = address.split(",")
@@ -689,7 +725,13 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
 }
 
 @Composable
-fun WeeklyForecastView(day: String, date: String, img: String, temp_high: String, temp_low: String) {
+fun WeeklyForecastView(
+    day: String,
+    date: String,
+    img: String,
+    temp_high: String,
+    temp_low: String
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -840,7 +882,9 @@ fun DetailsCard(forcast: List<DailyForecast>) {
         }
         Text(
             forcast[0].condition,
-            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
             textAlign = TextAlign.Center,
             color = Color.Gray
         )
@@ -922,25 +966,6 @@ fun Custom_divider() {
     )
 }
 
-fun fetchAndLoadWeather(context: Context, viewModel: WeatherViewModel) {
-    if (isLocationEnabled(context)) {
-        getCurrentLocation(
-            context,
-            onLocation = { lat, lon ->
-                Log.d("Location", "Latitude: $lat, Longitude: $lon")
-                viewModel.loadForecastByLocation(lat, lon)
-            },
-            onError = {
-                Log.e("Location", "Error getting location: $it")
-                viewModel.locationPermission = false
-            }
-        )
-    } else {
-        Toast.makeText(context, "Enable location services", Toast.LENGTH_LONG).show()
-        viewModel.loadCacheData()
-        viewModel.locationPermission = false
-    }
-}
 
 @Composable
 fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
@@ -990,7 +1015,10 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
                     Text("Close", color = Color.Black)
                 }
             }

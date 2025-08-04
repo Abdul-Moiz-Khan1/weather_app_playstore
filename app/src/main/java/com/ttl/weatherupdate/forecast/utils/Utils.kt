@@ -28,6 +28,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import androidx.core.content.edit
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
+import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -38,6 +39,7 @@ object Utils {
         onLocation: (String, String) -> Unit,
         onError: (Boolean) -> Unit
     ) {
+
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -141,13 +143,27 @@ object Utils {
         val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
         prefs.edit { putBoolean("seen", true) }
     }
+    fun setSavedCity(context: Context, city: String) {
+        val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
+        prefs.edit {
+            putString("saved_city", city)
+        }
+    }
 
-    fun getLocationName(context: Context, lat: Double, lon: Double): String? {
+    // Retrieve saved city
+    fun getSavedCity(context: Context): String? {
+        val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
+        return prefs.getString("saved_city", null)
+    }
+
+
+    fun getLocationName(context: Context, lat: Double, lon: Double , viewModel: WeatherViewModel): String? {
         return try {
             val geocoder = Geocoder(context, Locale.getDefault())
             val addresses = geocoder.getFromLocation(lat, lon, 1)
 
-            Log.d("CatchError_getCountry", addresses?.get(0)?.locality.toString())
+            Log.d("Utils_CatchError_getCountry", addresses?.get(0)?.locality.toString())
+            viewModel.location_city = addresses?.get(0)?.locality.toString()
             addresses?.get(0)?.locality
 
         } catch (e: IOException) {
@@ -156,13 +172,15 @@ object Utils {
         }
     }
 
-    fun getCountryFromCity(context: Context, cityName: String): String? {
+    fun getCountryFromCity(context: Context, cityName: String, viewModel: WeatherViewModel): String? {
         val geocoder = Geocoder(context, Locale.getDefault())
         return try {
             val addresses = geocoder.getFromLocationName(cityName, 1)
             if (!addresses.isNullOrEmpty()) {
-                Log.d("CatchError_getCountry", addresses[0].countryName.toString())
+                Log.d("Utils_CatchError_getCountry", addresses[0].countryName.toString())
+                viewModel.location_country = addresses[0].countryName
                 addresses[0].countryName
+
             } else {
                 null
             }

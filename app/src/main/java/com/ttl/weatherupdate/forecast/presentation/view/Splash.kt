@@ -82,15 +82,16 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             getCurrentLocation(context, onLocation = { lat, lon ->
                 Log.d("Location", "Latitude: $lat, Longitude: $lon")
                 viewModel.latitude = lat
                 viewModel.longitude = lon
-                val city = getLocationName(context, lat.toDouble(), lon.toDouble())
-                var country = Utils.getCountryFromCity(context, city.toString())
+                val city = getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
+                var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
+                Log.d("country:${country} , city: ${city}" , "$country $city")
                 viewModel.getDatafromWeb(context,city.toString() , country.toString())
                 viewModel.getHourlyData(context,city.toString() , country.toString())
             }, onError = {

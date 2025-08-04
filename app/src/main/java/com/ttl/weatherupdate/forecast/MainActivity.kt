@@ -18,7 +18,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
-import com.ttl.weatherupdate.forecast.presentation.view.Details
 import com.ttl.weatherupdate.forecast.presentation.view.Home
 import com.ttl.weatherupdate.forecast.presentation.view.OnBoarding
 import com.ttl.weatherupdate.forecast.presentation.view.Splash
@@ -43,7 +42,6 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.SPLASH) { Splash(navController , viewModel)  }
                     composable(Routes.HOME) { Home(navController , viewModel) }
                     composable(Routes.ONBOARDING) { OnBoarding(navController) }
-                    composable(Routes.DETAILS) { Details(navController,viewModel) }
                 }
             }
         }
