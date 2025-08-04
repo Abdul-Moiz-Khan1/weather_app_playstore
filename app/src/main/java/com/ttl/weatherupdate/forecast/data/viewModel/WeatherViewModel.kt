@@ -16,7 +16,6 @@ import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 import com.ttl.weatherupdate.forecast.data.repository.WeatherRepository
 import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
@@ -53,8 +52,6 @@ class WeatherViewModel @Inject constructor(
     private val _hourlyForecasts = MutableLiveData<List<HourlyForecast>>()
     val hourlyForecasts: LiveData<List<HourlyForecast>> get() = _hourlyForecasts
 
-    private val _forcast = MutableLiveData<ApiResponse?>()
-    val forecast: LiveData<ApiResponse?> = _forcast
     var isLoading by mutableStateOf(false)
 
     var location_city by mutableStateOf("")

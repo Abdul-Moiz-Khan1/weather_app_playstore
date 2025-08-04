@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
-import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 
 @Database(
     entities = [HourlyForecast::class, DailyForecast::class],

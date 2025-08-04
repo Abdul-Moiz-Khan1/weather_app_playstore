@@ -7,10 +7,8 @@ import androidx.room.Query
 import androidx.room.TypeConverters
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
-import com.ttl.weatherupdate.forecast.data.model.weatherResponse.ApiResponse
 
 @Dao
-@TypeConverters(WeatherTypeConverters::class)
 interface WeatherDao {
 
     // Hourly
