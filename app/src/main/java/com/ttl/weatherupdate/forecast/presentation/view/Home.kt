@@ -504,6 +504,7 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
                     Log.d("LocationSearch", "Calling APIs with: $searchText, $country")
 
                     getData(viewModel, context, searchText.trim(), country)
+                    searchText= ""
 
                 }) {
                     Icon(
@@ -516,31 +517,18 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
         )
 
     } else {
-        var address = viewModel.location_city
+
         val context = LocalContext.current
-        if (address.isEmpty() || address.isBlank() || address == "null") {
-            address = getSavedCity(context).toString()
-        }
+        var address = getSavedCity(context)
         var locationName by remember { mutableStateOf<String?>(address) }
-//        LaunchedEffect(address) {
-//            if (!forcast?.address.isNullOrEmpty() && address.contains(",")) {
-//                val parts = address.split(",")
-//                if (parts.size == 2) {
-//                    val lat = parts[0].trim().toDoubleOrNull()
-//                    val lon = parts[1].trim().toDoubleOrNull()
-//                    if (lat != null && lon != null) {
-//                        locationName = getLocationName(context, lat, lon)
-//                    }
-//                }
-//            }
-//        }
         Row(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .clip(RoundedCornerShape(30.dp))
                 .background(cards_bg)
                 .padding(12.dp)
-                .clickable { /* Optional: maybe open search too */ },
+                .clickable {
+                    showSearch = true },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -591,7 +579,6 @@ fun WeeklyForecastCard(forcast: List<DailyForecast>) {
         Spacer(modifier = Modifier.height(8.dp))
 
         for (i in 0..6) {
-            Log.d("weekly condition $i", forcast[i].condition)
             WeeklyForecastView(
                 forcast[i].day,
                 forcast[i].date,

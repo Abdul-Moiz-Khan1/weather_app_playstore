@@ -20,7 +20,6 @@ import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.setSavedCity
-import com.ttl.weatherupdate.forecast.utils.Utils.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -88,7 +87,6 @@ class WeatherViewModel @Inject constructor(
                     location_city,
                     location_country,
                     onSucess = { elements ->
-                        setSavedCity(context, city)
                         val allForecasts = mutableListOf<DailyForecast>()
 
                         for (row in elements) {
@@ -156,6 +154,7 @@ class WeatherViewModel @Inject constructor(
                     location_city,
                     location_country,
                     onSucess = { rows_hourly ->
+                        setSavedCity(context, city)
                         val allForecasts = mutableListOf<HourlyForecast>()
                         for (row in rows_hourly) {
                             val cells = row.select("td")
@@ -171,7 +170,6 @@ class WeatherViewModel @Inject constructor(
                                     rainAmount = cells[7].text()
                                 )
                                 allForecasts.add(forecast)
-                                Log.d("HourlyForecast", forecast.toString())
                             }
                         }
                         _hourlyForecasts.postValue(allForecasts) // ✅ Post once after loop

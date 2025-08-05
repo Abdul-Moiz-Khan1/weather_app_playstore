@@ -208,7 +208,10 @@ object Utils {
 
     fun setSavedCity(context: Context, city: String) {
         val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
+        Log.d("Utils" , "setsavedcity ${city}")
         prefs.edit {
+
+
             putString("saved_city", city)
         }
     }
@@ -291,10 +294,6 @@ object Utils {
             !isPM && hourPart == 12 -> 0
             else -> hourPart
         }
-    }
-
-    fun showToast(context: Context , msg: String){
-        Toast.makeText(context , msg , Toast.LENGTH_SHORT).show()
     }
 
 
