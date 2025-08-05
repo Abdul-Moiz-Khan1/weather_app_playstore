@@ -92,7 +92,8 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
                 val city = getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
                 var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
                 Log.d("country:${country} , city: ${city}" , "$country $city")
-                viewModel.getDatafromWeb(context,city.toString() , country.toString())
+                viewModel.getDatafromWeb(context,city.toString() , country.toString()
+                )
                 viewModel.getHourlyData(context,city.toString() , country.toString())
             }, onError = {
                 Log.d("Location", "Error: $it")

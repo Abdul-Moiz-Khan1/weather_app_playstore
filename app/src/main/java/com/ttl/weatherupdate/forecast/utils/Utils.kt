@@ -4,6 +4,7 @@ import android.content.Context
 import android.location.Geocoder
 import android.location.LocationManager
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -290,6 +291,10 @@ object Utils {
             !isPM && hourPart == 12 -> 0
             else -> hourPart
         }
+    }
+
+    fun showToast(context: Context , msg: String){
+        Toast.makeText(context , msg , Toast.LENGTH_SHORT).show()
     }
 
 

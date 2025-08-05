@@ -92,6 +92,8 @@ import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalTime
 
 @Composable
@@ -356,7 +358,7 @@ fun ShowUi(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(Utils.getImage(forcast[0].condition , "3pm")),
+                        painter = painterResource(Utils.getImage(forcast[0].condition, "3pm")),
                         contentDescription = null,
                         modifier = Modifier
                             .size(200.dp),
@@ -589,7 +591,7 @@ fun WeeklyForecastCard(forcast: List<DailyForecast>) {
         Spacer(modifier = Modifier.height(8.dp))
 
         for (i in 0..6) {
-            Log.d("weekly condition $i" , forcast[i].condition)
+            Log.d("weekly condition $i", forcast[i].condition)
             WeeklyForecastView(
                 forcast[i].day,
                 forcast[i].date,
@@ -703,7 +705,7 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
             )
 
             Image(
-                painter = painterResource(Utils.getImage(item.img , item.time)),
+                painter = painterResource(Utils.getImage(item.img, item.time)),
                 null,
                 modifier = Modifier.size(iconSize.dp)
             )
@@ -735,7 +737,7 @@ fun WeeklyForecastView(
     ) {
         Text(text = getDayNameFromDate(date), color = Color.White)
         Image(
-            painter = painterResource(id = Utils.getImage(img , "2pm")),
+            painter = painterResource(id = Utils.getImage(img, "2pm")),
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
@@ -782,7 +784,7 @@ fun DetailsCard(forcast: List<DailyForecast>) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(Utils.getImage(forcast[0].condition , "2pm")),
+                    painter = painterResource(Utils.getImage(forcast[0].condition, "2pm")),
                     null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
@@ -931,14 +933,19 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Image(
-                    painter = painterResource(id = Utils.getImage(item.condition , item.time)),
+                    painter = painterResource(id = Utils.getImage(item.condition, item.time)),
                     contentDescription = null,
                     modifier = Modifier.size(64.dp)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(" ${item.condition}", color = Color.White , fontWeight = FontWeight.SemiBold , fontSize = 14.sp)
+                Text(
+                    " ${item.condition}",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("🌡 Temp: ${item.temperature}", color = Color.White)
@@ -961,9 +968,19 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
 
 fun getData(viewModel: WeatherViewModel, context: Context, city: String, country: String) {
     Log.d("inHome", "getDataWEEKLY ${country} ${city}")
-    viewModel.getDatafromWeb(context, city.toString(), country.toString())
+
+    if (country == "null" || city == "null") {
+        Toast.makeText(context, "404! Location Not Found!", Toast.LENGTH_SHORT).show()
+    }
+
+    viewModel.getDatafromWeb(
+        context,
+        city.toString(),
+        country.toString()
+    )
     Log.d("inHome", "getDataHOURLY ${country} ${city}")
     viewModel.getHourlyData(context, city.toString(), country.toString())
+
 }
 
 //.clickable {

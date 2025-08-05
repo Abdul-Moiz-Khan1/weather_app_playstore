@@ -2,7 +2,6 @@ package com.ttl.weatherupdate.forecast.data.viewModel
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,6 +20,7 @@ import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.setSavedCity
+import com.ttl.weatherupdate.forecast.utils.Utils.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -61,7 +61,7 @@ class WeatherViewModel @Inject constructor(
     var latitude by mutableStateOf("")
     var longitude by mutableStateOf("")
 
-    fun getDatafromWeb(context: Context, city: String, country: String) {
+    fun getDatafromWeb(context: Context, city: String, country: String ) {
         Log.d("in_viewmodel" , "getDatafromweb ${country} ${city}")
         if (country == "United States") {
             location_country = "usa"
@@ -123,7 +123,6 @@ class WeatherViewModel @Inject constructor(
                     },
                     onError = {
                         Log.d("CatchError_viewmodel", "inError get_from_web: $it")
-                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                     }
                 )
             } catch (e: Exception) {
@@ -134,7 +133,7 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    fun getHourlyData(context: Context, city: String, country: String) {
+    fun getHourlyData(context: Context, city: String, country: String ) {
         Log.d("in_viewmodel" , "getHourlyData ${country} ${city}")
         if (country == "United States") {
             location_country = "usa"
@@ -186,7 +185,7 @@ class WeatherViewModel @Inject constructor(
                     }
                 )
             } catch (e: Exception) {
-                Log.d("CatchError_viewmodel", "inError get_hourly_data: ${e.message}")
+                Log.d("CatchError_viewmodel", "inError GET_HOURLY: ${e.message}")
             } finally {
                 isLoading = false
             }
