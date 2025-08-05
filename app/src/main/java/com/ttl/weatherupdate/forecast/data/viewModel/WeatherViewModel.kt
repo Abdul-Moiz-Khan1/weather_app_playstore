@@ -72,6 +72,7 @@ class WeatherViewModel @Inject constructor(
         } else {
             location_country = country
         }
+
         if (city.contains(" ")) {
             location_city = city.replace(" ", "-")
         } else if (location_city.isEmpty()) {
@@ -87,6 +88,7 @@ class WeatherViewModel @Inject constructor(
                     location_city,
                     location_country,
                     onSucess = { elements ->
+                        setSavedCity(context, city)
                         val allForecasts = mutableListOf<DailyForecast>()
 
                         for (row in elements) {
@@ -124,7 +126,6 @@ class WeatherViewModel @Inject constructor(
                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                     }
                 )
-                setSavedCity(context, location_city)
             } catch (e: Exception) {
                 Log.d("CatchError_viewmodel", "inError get_from_web: ${e.message}")
             } finally {

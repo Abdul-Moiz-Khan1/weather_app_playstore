@@ -356,7 +356,7 @@ fun ShowUi(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(Utils.getImage(forcast[0].condition)),
+                        painter = painterResource(Utils.getImage(forcast[0].condition , "3pm")),
                         contentDescription = null,
                         modifier = Modifier
                             .size(200.dp),
@@ -589,6 +589,7 @@ fun WeeklyForecastCard(forcast: List<DailyForecast>) {
         Spacer(modifier = Modifier.height(8.dp))
 
         for (i in 0..6) {
+            Log.d("weekly condition $i" , forcast[i].condition)
             WeeklyForecastView(
                 forcast[i].day,
                 forcast[i].date,
@@ -702,7 +703,7 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
             )
 
             Image(
-                painter = painterResource(Utils.getImage(item.img)),
+                painter = painterResource(Utils.getImage(item.img , item.time)),
                 null,
                 modifier = Modifier.size(iconSize.dp)
             )
@@ -734,7 +735,7 @@ fun WeeklyForecastView(
     ) {
         Text(text = getDayNameFromDate(date), color = Color.White)
         Image(
-            painter = painterResource(id = Utils.getImage(img)),
+            painter = painterResource(id = Utils.getImage(img , "2pm")),
             contentDescription = "null",
             modifier = Modifier.size(60.dp)
         )
@@ -781,7 +782,7 @@ fun DetailsCard(forcast: List<DailyForecast>) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = painterResource(Utils.getImage(forcast[0].condition)),
+                    painter = painterResource(Utils.getImage(forcast[0].condition , "2pm")),
                     null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
@@ -897,7 +898,6 @@ fun Custom_divider() {
     )
 }
 
-
 @Composable
 fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
@@ -931,13 +931,16 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Image(
-                    painter = painterResource(id = Utils.getImage(item.condition)),
+                    painter = painterResource(id = Utils.getImage(item.condition , item.time)),
                     contentDescription = null,
                     modifier = Modifier.size(64.dp)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
+                Text(" ${item.condition}", color = Color.White , fontWeight = FontWeight.SemiBold , fontSize = 14.sp)
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("🌡 Temp: ${item.temperature}", color = Color.White)
                 Text("🤒 Feels like: ${item.feelsLike}", color = Color.White)
                 Text("🌧 Rain chance: ${item.rainChance}", color = Color.White)

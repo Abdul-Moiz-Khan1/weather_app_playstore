@@ -74,22 +74,82 @@ object Utils {
         }
     }
 
-    fun getImage(condition: String): Int {
+//    fun getImage(condition: String, time: String): Int {
+//        return when {
+//            condition.contains("sunny", ignoreCase = true) -> R.drawable.sunny
+//            condition.contains("clear", ignoreCase = true) -> R.drawable.day_clear
+//            condition.contains("cloudy", ignoreCase = true) -> R.drawable.day_cloudy
+//            condition.contains("rain", ignoreCase = true) -> R.drawable.rain
+//            condition.contains("patchy rain", ignoreCase = true) -> R.drawable.patchy_rain
+//            condition.contains("wind", ignoreCase = true) -> R.drawable.windy_cloudy
+//            condition.contains("thunder", ignoreCase = true) -> R.drawable.thunderstorm
+//            condition.contains("lightning", ignoreCase = true) -> R.drawable.lightning
+//            condition.contains("fog", ignoreCase = true) -> R.drawable.fog
+//            condition.contains("snow", ignoreCase = true) -> R.drawable.snow
+//            condition.contains("blizzard", ignoreCase = true) -> R.drawable.snow
+//            else -> R.drawable.splash_img
+//        }
+//    }
+
+    fun getImage(condition: String, time: String): Int {
+        val hour = extractHour24(time)
+        val isNight = hour < 6 || hour >= 19
+
         return when {
-            condition.contains("sunny", ignoreCase = true) -> R.drawable.sunny
-            condition.contains("clear", ignoreCase = true) -> R.drawable.day_clear
-            condition.contains("cloudy", ignoreCase = true) -> R.drawable.day_cloudy
-            condition.contains("rain", ignoreCase = true) -> R.drawable.rain
-            condition.contains("patchy rain", ignoreCase = true) -> R.drawable.patchy_rain
-            condition.contains("wind", ignoreCase = true) -> R.drawable.windy_cloudy
-            condition.contains("thunder", ignoreCase = true) -> R.drawable.thunderstorm
-            condition.contains("lightning", ignoreCase = true) -> R.drawable.lightning
-            condition.contains("fog", ignoreCase = true) -> R.drawable.fog
-            condition.contains("snow", ignoreCase = true) -> R.drawable.snow
-            condition.contains("blizzard", ignoreCase = true) -> R.drawable.snow
-            else -> R.drawable.splash_img
+            condition.contains("thunder", ignoreCase = true)
+                    || condition.contains("lightning", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_thunderstorm else R.drawable.thunderstorm
+            }
+            condition.contains("sun", ignoreCase = true) &&condition.contains("most", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_sky_clear else R.drawable.day_cloudy
+            }
+            condition.contains("sunny", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_sky_clear else R.drawable.day_sunny
+            }
+
+            condition.contains("clear", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_sky_clear else R.drawable.day_clear
+            }
+
+            condition.contains("cloud", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_cloudy else R.drawable.day_cloudy
+            }
+
+            condition.contains("patchy rain", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_rain else R.drawable.patchy_rain
+            }
+
+            condition.contains("rain", ignoreCase = true)
+                    || condition.contains("shower", ignoreCase = true)
+                    || condition.contains("sleet", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_rain else R.drawable.rain
+            }
+
+            condition.contains("wind", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_wind else R.drawable.windy_cloudy
+            }
+
+
+
+            condition.contains("fog", ignoreCase = true)
+                    || condition.contains("mist", ignoreCase = true)
+                    || condition.contains("haze", ignoreCase = true)
+                    || condition.contains("smoke", ignoreCase = true)
+                    || condition.contains("dust", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_fog else R.drawable.fog
+            }
+
+            condition.contains("snow", ignoreCase = true)
+                    || condition.contains("blizzard", ignoreCase = true)
+                    || condition.contains("ice", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_snow else R.drawable.snow
+            }
+
+            else -> R.drawable.day_clear
         }
+
     }
+
 
     fun tempToInt(temp: Double?): Int? {
         return temp?.toInt()
@@ -144,6 +204,7 @@ object Utils {
         val prefs = context.getSharedPreferences("onboarding", Context.MODE_PRIVATE)
         prefs.edit { putBoolean("seen", true) }
     }
+
     fun setSavedCity(context: Context, city: String) {
         val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
         prefs.edit {
@@ -158,7 +219,12 @@ object Utils {
     }
 
 
-    fun getLocationName(context: Context, lat: Double, lon: Double , viewModel: WeatherViewModel): String? {
+    fun getLocationName(
+        context: Context,
+        lat: Double,
+        lon: Double,
+        viewModel: WeatherViewModel
+    ): String? {
         return try {
             val geocoder = Geocoder(context, Locale.getDefault())
             val addresses = geocoder.getFromLocation(lat, lon, 1)
@@ -173,7 +239,11 @@ object Utils {
         }
     }
 
-    fun getCountryFromCity(context: Context, cityName: String, viewModel: WeatherViewModel): String? {
+    fun getCountryFromCity(
+        context: Context,
+        cityName: String,
+        viewModel: WeatherViewModel
+    ): String? {
         val geocoder = Geocoder(context, Locale.getDefault())
         return try {
             val addresses = geocoder.getFromLocationName(cityName, 1)
@@ -209,6 +279,17 @@ object Utils {
         }
         val period = if (isAM) "am" else "pm"
         return "$hour12$period"
+    }
+
+    fun extractHour24(time: String): Int {
+        val lower = time.lowercase().trim()
+        val hourPart = lower.takeWhile { it.isDigit() }.toIntOrNull() ?: return 0
+        val isPM = lower.contains("pm")
+        return when {
+            isPM && hourPart != 12 -> hourPart + 12
+            !isPM && hourPart == 12 -> 0
+            else -> hourPart
+        }
     }
 
 

@@ -16,3 +16,4 @@ local.properties
 signing/
 /.kotlin/errors/errors-1754024786613.log
 /.kotlin/errors/errors-1754031921802.log
+/app/release/app-release.aab
