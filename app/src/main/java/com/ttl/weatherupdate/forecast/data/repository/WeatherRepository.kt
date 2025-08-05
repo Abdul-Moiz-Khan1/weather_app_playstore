@@ -88,5 +88,4 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-
 }

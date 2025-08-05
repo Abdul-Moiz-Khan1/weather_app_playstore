@@ -969,21 +969,3 @@ fun getData(viewModel: WeatherViewModel, context: Context, city: String, country
 
 }
 
-//.clickable {
-//    viewModel.location_city = searchText.trim()
-//    val country =
-//        getCountryFromCity(context, searchText, viewModel).toString()
-//
-//
-//    viewModel.getHourlyData(
-//        context,
-//        searchText.trim(), country
-//    )
-//    Log.d("LocationSearch", "Calling getHourlyData with $searchText and $country")
-//    viewModel.getDatafromWeb(
-//        context,
-//        searchText.trim(),
-//        country
-//    )
-//
-//}
