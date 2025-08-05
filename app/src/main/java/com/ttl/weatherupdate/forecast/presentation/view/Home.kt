@@ -877,7 +877,6 @@ fun DetailsCard(forcast: List<DailyForecast>) {
 
 }
 
-
 @Composable
 fun Custom_divider() {
     Divider(
