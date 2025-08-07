@@ -11,20 +11,24 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -39,6 +43,8 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -50,6 +56,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -57,10 +64,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -86,6 +97,7 @@ import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
 import com.ttl.weatherupdate.forecast.utils.Utils.tempToInt
 
 import com.ttl.weatherupdate.forecast.R
+import com.ttl.weatherupdate.forecast.data.model.CitySuggestion
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
@@ -93,6 +105,8 @@ import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
 import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 
@@ -101,37 +115,6 @@ fun Home(
     navController: NavController, viewModel: WeatherViewModel
 ) {
     val context = LocalContext.current
-
-    var permissionChecked by remember { mutableStateOf(false) }
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                permissionChecked = true
-                if (isLocationEnabled(context)) {
-                    getCurrentLocation(context, onLocation = { lat, lon ->
-                        Log.d("Location", "Latitude: $lat, Longitude: $lon")
-                        viewModel.latitude = lat
-                        viewModel.longitude = lon
-                        val city =
-                            getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
-                        var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
-                        getData(viewModel, context, city.toString(), country.toString())
-
-                    }, onError = {
-                        Log.d("Location", "Error: $it")
-                        viewModel.locationPermission = false
-                    })
-                } else {
-                    viewModel.locationPermission = false
-                    Toast.makeText(context, "Please enable location services", Toast.LENGTH_LONG)
-                        .show()
-                }
-            } else {
-                permissionChecked = true
-                viewModel.locationPermission = false
-                Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
-            }
-        }
 
 
     setSeenOnboarding(context)
@@ -158,25 +141,7 @@ fun Home(
         viewModel.loadForecastsFromCache()
     }
 
-    LaunchedEffect(Unit) {
-        try {
-            if (ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                viewModel.locationPermission = true
-                permissionChecked = true
-            } else {
-                launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-            }
-        } catch (e: Exception) {
-            Log.d("CatchError_in_home", "error: ${e.message}")
-            permissionChecked = true
-        }
-    }
-
-    if (!permissionChecked) {
+    if (weeklyForecasts.isEmpty() || hourlyForecasts.isEmpty()) {
         ShowLoading() // Optional while waiting
     } else if (loading) {
         Log.d("CatchError_in_home", "loading_NoInternet")
@@ -250,7 +215,7 @@ fun ShowNoData(image: Int, text: String, searchable: Boolean, viewModel: Weather
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
         if (searchable) {
-            CustomSearch(viewModel)
+            LocationSearchBar(viewModel)
         }
         Image(
             painter = painterResource(image),
@@ -267,46 +232,6 @@ fun ShowNoData(image: Int, text: String, searchable: Boolean, viewModel: Weather
             fontFamily = FontFamily.SansSerif
         )
     }
-}
-
-@Composable
-fun CustomSearch(viewModel: WeatherViewModel) {
-    var searchText by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    TextField(
-        value = searchText,
-        onValueChange = { searchText = it },
-        placeholder = { Text("Search location...") },
-        singleLine = true,
-        shape = RoundedCornerShape(30.dp),
-        colors = TextFieldDefaults.colors(
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.Gray,
-            focusedContainerColor = cards_bg,
-            unfocusedContainerColor = cards_bg,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = Color.DarkGray,
-            focusedPlaceholderColor = Color.Gray,
-            unfocusedPlaceholderColor = Color.Gray
-        ),
-        modifier = Modifier
-            .fillMaxWidth(0.8f)
-            .padding(4.dp),
-        trailingIcon = {
-            IconButton(onClick = {
-            }) {
-                Icon(
-                    painter = painterResource(R.drawable.search),
-                    contentDescription = null,
-                    tint = Color.Gray, modifier = Modifier.clickable {
-                        val country = getCountryFromCity(context, searchText, viewModel).toString()
-                        getData(viewModel, context, searchText.trim(), country)
-                    }
-                )
-            }
-        }
-    )
 }
 
 @Composable
@@ -469,85 +394,179 @@ fun ShowUi(
 
 @Composable
 fun LocationSearchBar(viewModel: WeatherViewModel) {
+
     var showSearch by remember { mutableStateOf(false) }
-    var searchText by remember { mutableStateOf("") }
 
-    if (showSearch) {
-        TextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text("Search location...") },
-            singleLine = true,
-            shape = RoundedCornerShape(30.dp),
-            colors = TextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.Gray,
-                focusedContainerColor = cards_bg,
-                unfocusedContainerColor = cards_bg,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = Color.DarkGray,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
-            ),
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .padding(4.dp),
-            trailingIcon = {
+    var query by remember { mutableStateOf("") }
+    var suggestions by remember { mutableStateOf<List<CitySuggestion>>(emptyList()) }
+    var isFocused by remember { mutableStateOf(false) }
 
-                val context = LocalContext.current
-                IconButton(onClick = {
-                    showSearch = false
-                    viewModel.location_city = searchText.trim()
-                    val country = getCountryFromCity(context, searchText, viewModel).toString()
+    val focusManager = LocalFocusManager.current
 
-                    Log.d("LocationSearch", "Calling APIs with: $searchText, $country")
-
-                    getData(viewModel, context, searchText.trim(), country)
-                    searchText= ""
-
-                }) {
-                    Icon(
-                        painter = painterResource(R.drawable.search),
-                        contentDescription = null,
-                        tint = Color.Gray, modifier = Modifier
-                    )
+    LaunchedEffect(query) {
+        snapshotFlow { query }
+            .debounce(500)
+            .collectLatest { city ->
+                if (city.length >= 2) {
+                    suggestions = viewModel.fetchSuggestions(city)
+                } else {
+                    suggestions = emptyList()
                 }
             }
-        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)) {
 
-    } else {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            isFocused = true
+                        },
+                        label = { Text("Enter city") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                isFocused = focusState.isFocused
+                            }
+                    )
+
+        }
 
         val context = LocalContext.current
-        var address = getSavedCity(context)
-        var locationName by remember { mutableStateOf<String?>(address) }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .clip(RoundedCornerShape(30.dp))
-                .background(cards_bg)
-                .padding(12.dp)
-                .clickable {
-                    showSearch = true },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = locationName ?: "Unknown location",
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Image(
-                painter = painterResource(R.drawable.search),
-                contentDescription = null,
+
+        // Suggestions overlaid on top
+        if (suggestions.isNotEmpty() && isFocused) {
+            LazyColumn(
                 modifier = Modifier
-                    .size(25.dp)
-                    .clickable {
-                        showSearch = true
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp)
+                    .padding(horizontal = 16.dp)
+                    .absoluteOffset(y = 64.dp) // Adjust if needed based on TextField height
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(grad_home_above, grad_home_below)
+                        )
+                    )
+            ) {
+
+                items(suggestions) { item ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                query = item.name
+                                isFocused = false
+                                suggestions = emptyList()
+                                focusManager.clearFocus()
+                                viewModel.SearchDatafromWeb(item.id)
+                                viewModel.SearchHourlyData(context, item.id)
+
+
+                            }
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "ID: ${item.id}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
                     }
-            )
+                }
+            }
         }
     }
+//    var searchText by remember { mutableStateOf("") }
+
+//    if (showSearch) {
+//        TextField(
+//            value = searchText,
+//            onValueChange = { searchText = it },
+//            placeholder = { Text("Search location...") },
+//            singleLine = true,
+//            shape = RoundedCornerShape(30.dp),
+//            colors = TextFieldDefaults.colors(
+//                focusedTextColor = Color.White,
+//                unfocusedTextColor = Color.Gray,
+//                focusedContainerColor = cards_bg,
+//                unfocusedContainerColor = cards_bg,
+//                focusedIndicatorColor = Color.Transparent,
+//                unfocusedIndicatorColor = Color.Transparent,
+//                cursorColor = Color.DarkGray,
+//                focusedPlaceholderColor = Color.Gray,
+//                unfocusedPlaceholderColor = Color.Gray
+//            ),
+//            modifier = Modifier
+//                .fillMaxWidth(0.8f)
+//                .padding(4.dp),
+//            trailingIcon = {
+//
+//                val context = LocalContext.current
+//                IconButton(onClick = {
+//                    showSearch = false
+//                    viewModel.location_city = searchText.trim()
+//                    val country = getCountryFromCity(context, searchText, viewModel).toString()
+//
+//                    Log.d("LocationSearch", "Calling APIs with: $searchText, $country")
+//
+//                    getData(viewModel, context, searchText.trim(), country)
+//                    searchText= ""
+//
+//                }) {
+//                    Icon(
+//                        painter = painterResource(R.drawable.search),
+//                        contentDescription = null,
+//                        tint = Color.Gray, modifier = Modifier
+//                    )
+//                }
+//            }
+//        )
+//
+//    } else {
+//
+//        val context = LocalContext.current
+//        var address = getSavedCity(context)
+//        var locationName by remember { mutableStateOf<String?>(address) }
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth(0.8f)
+//                .clip(RoundedCornerShape(30.dp))
+//                .background(cards_bg)
+//                .padding(12.dp)
+//                .clickable {
+//                    showSearch = true },
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.Center
+//        ) {
+//            Text(
+//                text = locationName ?: "Unknown location",
+//                color = Color.Gray
+//            )
+//            Spacer(modifier = Modifier.width(16.dp))
+//            Image(
+//                painter = painterResource(R.drawable.search),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .size(25.dp)
+//                    .clickable {
+//                        showSearch = true
+//                    }
+//            )
+//        }
+//    }
 }
 
 @Composable
@@ -580,7 +599,6 @@ fun WeeklyForecastCard(forcast: List<DailyForecast>) {
 
         for (i in 0..6) {
             WeeklyForecastView(
-                forcast[i].day,
                 forcast[i].date,
                 forcast[i].condition,
                 forcast[i].maxTemp,
@@ -597,14 +615,6 @@ fun ScrollableRow(list1: List<DailyForecastItem>) {
 
     var selectedItem by remember { mutableStateOf<DailyForecastItem?>(null) }
     val listState = rememberLazyListState()
-
-//// Scroll to current hour index
-//    LaunchedEffect(Unit) {
-//        val currentHour = LocalTime.now().hour
-//        if (currentHour in list.indices) {
-//            listState.scrollToItem(currentHour)
-//        }
-//    }
     LazyRow(
         state = listState,
         modifier = Modifier
@@ -711,7 +721,6 @@ fun DailyForecastView(item: DailyForecastItem, modifier: Modifier, iconSize: Int
 
 @Composable
 fun WeeklyForecastView(
-    day: String,
     date: String,
     img: String,
     temp_high: String,
@@ -930,7 +939,7 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
                     " ${item.condition}",
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp, textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -952,20 +961,4 @@ fun WeatherDetailDialog(item: DailyForecastItem, onDismiss: () -> Unit) {
     }
 }
 
-fun getData(viewModel: WeatherViewModel, context: Context, city: String, country: String) {
-    Log.d("inHome", "getDataWEEKLY ${country} ${city}")
-
-    if (country == "null" || city == "null") {
-        Toast.makeText(context, "404! Location Not Found!", Toast.LENGTH_SHORT).show()
-    }
-
-    viewModel.getDatafromWeb(
-        context,
-        city.toString(),
-        country.toString()
-    )
-    Log.d("inHome", "getDataHOURLY ${country} ${city}")
-    viewModel.getHourlyData(context, city.toString(), country.toString())
-
-}
 
