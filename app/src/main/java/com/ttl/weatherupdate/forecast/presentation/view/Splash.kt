@@ -46,20 +46,18 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay
-import com.ttl.weatherupdate.forecast.utils.Utils.getCurrentLocation
+import kotlinx.coroutines.delay 
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import com.ttl.weatherupdate.forecast.ui.theme.left_grad
 import com.ttl.weatherupdate.forecast.utils.Routes
 import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
 import com.ttl.weatherupdate.forecast.utils.Utils.hasSeenOnboarding
-import com.ttl.weatherupdate.forecast.utils.Utils.isLocationEnabled
+ 
 import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
 import okhttp3.Route
 
 import com.ttl.weatherupdate.forecast.R
-import com.ttl.weatherupdate.forecast.utils.Utils
-import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import com.ttl.weatherupdate.forecast.utils.Utils 
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -68,7 +66,7 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
     val context = LocalContext.current
     var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding(context)) }
     LaunchedEffect(Unit) {
-        viewModel.getDatafromWeb()
+        viewModel.getDatafromWeb(context)
         viewModel.getHourlyData()
         delay(1500)
         if (showOnboarding) {
@@ -81,27 +79,6 @@ fun Splash(navController: NavController, viewModel: WeatherViewModel) {
             }
         }
     }
-//    LaunchedEffect(Unit) {
-//        if (ContextCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            getCurrentLocation(context, onLocation = { lat, lon ->
-//                Log.d("Location", "Latitude: $lat, Longitude: $lon")
-//                viewModel.latitude = lat
-//                viewModel.longitude = lon
-//                val city = getLocationName(context, lat.toDouble(), lon.toDouble(), viewModel)
-//                var country = Utils.getCountryFromCity(context, city.toString(), viewModel)
-//                Log.d("country:${country} , city: ${city}", "$country $city")
-//                viewModel.getDatafromWeb()
-//                viewModel.getHourlyData()
-//            }, onError = {
-//                Log.d("Location", "Error: $it")
-//                viewModel.locationPermission = false
-//            })
-//        }
-//    }
     Column(
         modifier = Modifier
             .fillMaxSize()

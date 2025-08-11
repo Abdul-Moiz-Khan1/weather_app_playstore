@@ -89,20 +89,17 @@ import com.ttl.weatherupdate.forecast.ui.theme.main_card_grad_top
 import com.ttl.weatherupdate.forecast.ui.theme.text_left_grad
 import com.ttl.weatherupdate.forecast.ui.theme.text_right_grad
 import com.ttl.weatherupdate.forecast.utils.Utils
-import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
-import com.ttl.weatherupdate.forecast.utils.Utils.getCurrentLocation
+import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading 
 import com.ttl.weatherupdate.forecast.utils.Utils.getDailyForecastItems
-import com.ttl.weatherupdate.forecast.utils.Utils.isLocationEnabled
+ 
 import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
 import com.ttl.weatherupdate.forecast.utils.Utils.tempToInt
 
 import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.CitySuggestion
 import com.ttl.weatherupdate.forecast.data.model.DailyForecast
-import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
-import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
-import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate
-import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
+import com.ttl.weatherupdate.forecast.data.model.HourlyForecast 
+import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate 
 import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -391,17 +388,16 @@ fun ShowUi(
     }
 
 }
-
 @Composable
 fun LocationSearchBar(viewModel: WeatherViewModel) {
-
     var showSearch by remember { mutableStateOf(false) }
-
     var query by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf<List<CitySuggestion>>(emptyList()) }
     var isFocused by remember { mutableStateOf(false) }
+    var searchText by remember { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     LaunchedEffect(query) {
         snapshotFlow { query }
@@ -414,41 +410,91 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
                 }
             }
     }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (showSearch) {
+                // Search suggestions text field
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = {
+                        query = it
+                        isFocused = true
+                    },
+                    label = { Text("Enter city") },
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.White,
+                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            isFocused = focusState.isFocused
+                        }
+                )
 
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = {
-                            query = it
-                            isFocused = true
-                        },
-                        label = { Text("Enter city") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState ->
-                                isFocused = focusState.isFocused
-                            }
-                    )
 
+            } else {
+                // Your rounded search TextField
+                TextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    placeholder = { Text("${getSavedCity(context)}" , modifier = Modifier.fillMaxWidth() , textAlign = TextAlign.Center) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(30.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.Gray,
+                        focusedContainerColor = cards_bg,
+                        unfocusedContainerColor = cards_bg,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color.DarkGray,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .padding(4.dp),
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            showSearch = true // Switch to suggestions mode
+                            viewModel.location_city = searchText.trim()
+                            searchText = ""
+                        }) {
+                            Icon(
+                                painter = painterResource(R.drawable.search),
+                                contentDescription = null,
+                                tint = Color.Gray
+                            )
+                        }
+                    }
+                )
+            }
         }
 
-        val context = LocalContext.current
-
-        // Suggestions overlaid on top
-        if (suggestions.isNotEmpty() && isFocused) {
+        if (showSearch && suggestions.isNotEmpty() && isFocused) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 300.dp)
                     .padding(horizontal = 16.dp)
-                    .absoluteOffset(y = 64.dp) // Adjust if needed based on TextField height
+                    .absoluteOffset(y = 64.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         brush = Brush.verticalGradient(
@@ -456,7 +502,6 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
                         )
                     )
             ) {
-
                 items(suggestions) { item ->
                     Column(
                         modifier = Modifier
@@ -468,8 +513,7 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
                                 focusManager.clearFocus()
                                 viewModel.SearchDatafromWeb(item.id)
                                 viewModel.SearchHourlyData(context, item.id)
-
-
+                                showSearch = false
                             }
                             .padding(16.dp)
                     ) {
@@ -489,84 +533,6 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
             }
         }
     }
-//    var searchText by remember { mutableStateOf("") }
-
-//    if (showSearch) {
-//        TextField(
-//            value = searchText,
-//            onValueChange = { searchText = it },
-//            placeholder = { Text("Search location...") },
-//            singleLine = true,
-//            shape = RoundedCornerShape(30.dp),
-//            colors = TextFieldDefaults.colors(
-//                focusedTextColor = Color.White,
-//                unfocusedTextColor = Color.Gray,
-//                focusedContainerColor = cards_bg,
-//                unfocusedContainerColor = cards_bg,
-//                focusedIndicatorColor = Color.Transparent,
-//                unfocusedIndicatorColor = Color.Transparent,
-//                cursorColor = Color.DarkGray,
-//                focusedPlaceholderColor = Color.Gray,
-//                unfocusedPlaceholderColor = Color.Gray
-//            ),
-//            modifier = Modifier
-//                .fillMaxWidth(0.8f)
-//                .padding(4.dp),
-//            trailingIcon = {
-//
-//                val context = LocalContext.current
-//                IconButton(onClick = {
-//                    showSearch = false
-//                    viewModel.location_city = searchText.trim()
-//                    val country = getCountryFromCity(context, searchText, viewModel).toString()
-//
-//                    Log.d("LocationSearch", "Calling APIs with: $searchText, $country")
-//
-//                    getData(viewModel, context, searchText.trim(), country)
-//                    searchText= ""
-//
-//                }) {
-//                    Icon(
-//                        painter = painterResource(R.drawable.search),
-//                        contentDescription = null,
-//                        tint = Color.Gray, modifier = Modifier
-//                    )
-//                }
-//            }
-//        )
-//
-//    } else {
-//
-//        val context = LocalContext.current
-//        var address = getSavedCity(context)
-//        var locationName by remember { mutableStateOf<String?>(address) }
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth(0.8f)
-//                .clip(RoundedCornerShape(30.dp))
-//                .background(cards_bg)
-//                .padding(12.dp)
-//                .clickable {
-//                    showSearch = true },
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.Center
-//        ) {
-//            Text(
-//                text = locationName ?: "Unknown location",
-//                color = Color.Gray
-//            )
-//            Spacer(modifier = Modifier.width(16.dp))
-//            Image(
-//                painter = painterResource(R.drawable.search),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .size(25.dp)
-//                    .clickable {
-//                        showSearch = true
-//                    }
-//            )
-//        }
-//    }
 }
 
 @Composable

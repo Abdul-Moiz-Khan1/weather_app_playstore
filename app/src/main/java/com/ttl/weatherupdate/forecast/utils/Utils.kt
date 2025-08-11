@@ -36,27 +36,6 @@ import java.time.LocalTime
 import java.util.Calendar
 
 object Utils {
-    fun getCurrentLocation(
-        context: Context,
-        onLocation: (String, String) -> Unit,
-        onError: (Boolean) -> Unit
-    ) {
-
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        try {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    onError(true)
-                    onLocation(location.latitude.toString(), location.longitude.toString())
-                } else {
-                    onError(false)
-                    Log.e("LocationError_Utils", "Location is null")
-                }
-            }
-        } catch (e: SecurityException) {
-            Log.e("LocationError_Utils", "Permission denied: ${e.message}")
-        }
-    }
 
     fun getDayNameFromDate(date: String): String {
         return try {
@@ -89,6 +68,9 @@ object Utils {
             }
             condition.contains("sunny", ignoreCase = true) -> {
                 if (isNight) R.drawable.night_sky_clear else R.drawable.day_sunny
+            }
+            condition.contains("overcast", ignoreCase = true) -> {
+                if (isNight) R.drawable.night_overcast else R.drawable.overcast
             }
 
             condition.contains("clear", ignoreCase = true) -> {
@@ -203,55 +185,6 @@ object Utils {
     fun getSavedCity(context: Context): String? {
         val prefs = context.getSharedPreferences("city", Context.MODE_PRIVATE)
         return prefs.getString("saved_city", null)
-    }
-
-
-    fun getLocationName(
-        context: Context,
-        lat: Double,
-        lon: Double,
-        viewModel: WeatherViewModel
-    ): String? {
-        return try {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(lat, lon, 1)
-
-            Log.d("Utils_CatchError_getCountry", addresses?.get(0)?.locality.toString())
-            viewModel.location_city = addresses?.get(0)?.locality.toString()
-            addresses?.get(0)?.locality
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    fun getCountryFromCity(
-        context: Context,
-        cityName: String,
-        viewModel: WeatherViewModel
-    ): String? {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        return try {
-            val addresses = geocoder.getFromLocationName(cityName, 1)
-            if (!addresses.isNullOrEmpty()) {
-                Log.d("Utils_CatchError_getCountry", addresses[0].countryName.toString())
-                viewModel.location_country = addresses[0].countryName
-                addresses[0].countryName
-
-            } else {
-                null
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    fun isLocationEnabled(context: Context): Boolean {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     fun formatHour(index: Int): String {

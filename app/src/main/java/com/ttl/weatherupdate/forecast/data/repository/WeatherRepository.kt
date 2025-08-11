@@ -18,9 +18,8 @@ import org.jsoup.select.Elements
 class WeatherRepository @Inject constructor(
     private val dao: WeatherDao
 ) {
-
-
     suspend fun getWeeklyDatafromWeb(
+        context: Context,
         onSucess: (Elements) -> Unit,
         onError: (String) -> Unit
     ) = withContext(Dispatchers.IO) {
@@ -39,6 +38,8 @@ class WeatherRepository @Inject constructor(
             if (response.isRedirect) {
                 val redirectedUrl = response.header("Location")  // ← this is the final URL
                 Log.d("Redirected URL", redirectedUrl.toString())
+                val city = redirectedUrl?.substringAfterLast("/")
+                setSavedCity(context, city.toString())
 
                 val doc_hourly =
                     Jsoup.connect("$redirectedUrl/ext")

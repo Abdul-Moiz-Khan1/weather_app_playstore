@@ -18,8 +18,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import com.ttl.weatherupdate.forecast.data.repository.WeatherRepository
 import com.ttl.weatherupdate.forecast.utils.NetworkStatusTracker
-import com.ttl.weatherupdate.forecast.utils.Utils.getCountryFromCity
-import com.ttl.weatherupdate.forecast.utils.Utils.getLocationName
 import com.ttl.weatherupdate.forecast.utils.Utils.setSavedCity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,12 +57,12 @@ class WeatherViewModel @Inject constructor(
 
     var locationPermission by mutableStateOf(false)
 
-    fun getDatafromWeb() {
+    fun getDatafromWeb(context: Context) {
 
         viewModelScope.launch {
             isLoading = true
             try {
-                repository.getWeeklyDatafromWeb(
+                repository.getWeeklyDatafromWeb(context,
                     onSucess = { elements ->
                         val allForecasts = mutableListOf<DailyForecast>()
 
@@ -118,6 +116,7 @@ class WeatherViewModel @Inject constructor(
                 repository.getHourlyForecastData(
 
                     onSucess = { rows_hourly ->
+
                         val allForecasts = mutableListOf<HourlyForecast>()
                         for (row in rows_hourly) {
                             val cells = row.select("td")
@@ -214,7 +213,9 @@ class WeatherViewModel @Inject constructor(
                 repository.SearchHourlyForecastData(
                     city,
                     onSucess = { rows_hourly ->
-                        setSavedCity(context, city)
+
+                        val cityName = city.substringAfterLast("/")
+                        setSavedCity(context, cityName)
                         val allForecasts = mutableListOf<HourlyForecast>()
                         for (row in rows_hourly) {
                             val cells = row.select("td")
