@@ -17,7 +17,7 @@ import org.jsoup.select.Elements
 
 class WeatherRepository @Inject constructor(
     private val dao: WeatherDao
-) {
+) { 
     suspend fun getWeeklyDatafromWeb(
         context: Context,
         onSucess: (Elements) -> Unit,
