@@ -3,16 +3,13 @@ package com.ttl.weatherupdate.forecast.data.repository
 import android.content.Context
 import android.util.Log
 import com.ttl.weatherupdate.forecast.data.local.WeatherDao
-import com.ttl.weatherupdate.forecast.data.model.DailyForecast
-import com.ttl.weatherupdate.forecast.data.model.HourlyForecast
 import com.ttl.weatherupdate.forecast.utils.Utils.setSavedCity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import javax.inject.Inject
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
+import javax.inject.Inject
 import org.jsoup.select.Elements
 
 class WeatherRepository @Inject constructor(

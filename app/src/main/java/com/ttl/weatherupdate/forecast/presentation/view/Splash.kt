@@ -1,16 +1,5 @@
 package com.ttl.weatherupdate.forecast.presentation.view
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.Color
-import android.location.Location
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,32 +20,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay 
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import com.ttl.weatherupdate.forecast.ui.theme.left_grad
 import com.ttl.weatherupdate.forecast.utils.Routes
-import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
 import com.ttl.weatherupdate.forecast.utils.Utils.hasSeenOnboarding
- 
-import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
-import okhttp3.Route
-
 import com.ttl.weatherupdate.forecast.R
-import com.ttl.weatherupdate.forecast.utils.Utils 
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

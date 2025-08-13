@@ -1,17 +1,11 @@
 package com.ttl.weatherupdate.forecast.presentation.view
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,10 +27,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -44,9 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -64,11 +54,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.ttl.weatherupdate.forecast.data.viewModel.WeatherViewModel
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -79,7 +67,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import com.ttl.weatherupdate.forecast.data.model.DailyForecastItem
 import com.ttl.weatherupdate.forecast.ui.theme.cards_bg
 import com.ttl.weatherupdate.forecast.ui.theme.grad_home_above
@@ -93,7 +80,6 @@ import com.ttl.weatherupdate.forecast.utils.Utils.ShowLoading
 import com.ttl.weatherupdate.forecast.utils.Utils.getDailyForecastItems
  
 import com.ttl.weatherupdate.forecast.utils.Utils.setSeenOnboarding
-import com.ttl.weatherupdate.forecast.utils.Utils.tempToInt
 
 import com.ttl.weatherupdate.forecast.R
 import com.ttl.weatherupdate.forecast.data.model.CitySuggestion
@@ -101,11 +87,8 @@ import com.ttl.weatherupdate.forecast.data.model.DailyForecast
 import com.ttl.weatherupdate.forecast.data.model.HourlyForecast 
 import com.ttl.weatherupdate.forecast.utils.Utils.getDayNameFromDate 
 import com.ttl.weatherupdate.forecast.utils.Utils.getSavedCity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.withContext
-import java.time.LocalTime
 
 @Composable
 fun Home(
