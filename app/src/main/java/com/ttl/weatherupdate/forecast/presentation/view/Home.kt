@@ -448,7 +448,6 @@ fun LocationSearchBar(viewModel: WeatherViewModel) {
                         }
                 )
 
-
             } else {
                 // Your rounded search TextField
                 TextField(
